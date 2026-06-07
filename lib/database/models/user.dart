@@ -1,11 +1,11 @@
 import 'dart:convert';
 
-import 'package:template_flutter/database/models/base_model.dart';
+import 'package:carbon_tracker/database/models/base_model.dart';
 
 
 class User extends BaseModel {
-  final List<dynamic> preferredTransports;
-  final List<dynamic> frequentTransports;
+  final List<String> preferredTransports;
+  final List<String> frequentTransports;
   final String trackingMode;// Default tracking mode; other modes will be supported later
   final double weight;
   final String? sustainabilityThoughts;

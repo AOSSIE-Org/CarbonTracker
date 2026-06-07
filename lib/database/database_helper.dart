@@ -1,9 +1,9 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
-import 'package:template_flutter/database/database_exceptions.dart';
-import 'package:template_flutter/database/models/base_model.dart';
-import 'package:template_flutter/database/models/trips.dart';
-import 'package:template_flutter/database/models/user.dart';
+import 'package:carbon_tracker/database/database_exceptions.dart';
+import 'package:carbon_tracker/database/models/base_model.dart';
+import 'package:carbon_tracker/database/models/trips.dart';
+import 'package:carbon_tracker/database/models/user.dart';
 
 class DatabaseHelper {
   // Singleton pattern
