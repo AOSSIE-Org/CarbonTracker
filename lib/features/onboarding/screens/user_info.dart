@@ -1,9 +1,10 @@
 import 'dart:io';
-
 import 'package:carbon_tracker/core/config/route_constants.dart';
 import 'package:carbon_tracker/database/models/user.dart';
-import 'package:carbon_tracker/features/onboarding/matchmaking_service.dart';
+import 'package:carbon_tracker/features/fitness/services/health_service.dart';
+import 'package:carbon_tracker/features/onboarding/services/matchmaking_service.dart';
 import 'package:carbon_tracker/features/onboarding/providers/user_provider.dart';
+import 'package:carbon_tracker/features/onboarding/widgets/watch_modal.dart';
 import 'package:carbon_tracker/shared/widgets/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,7 +15,7 @@ import 'package:carbon_tracker/features/onboarding/data/privacy_policy_info.dart
     as privacy;
 import 'package:carbon_tracker/features/onboarding/data/tracking_modes_info.dart'
     as tracking;
-import 'package:carbon_tracker/features/onboarding/widgets/modal.dart';
+import 'package:carbon_tracker/core/widgets/modal.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -56,20 +57,14 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
   }
 
   bool _isWeightValid() {
-    if (_weight < 1 || _weight > 500) {
-      return false;
-    }
-    return true;
+    return (_weight > 1 && _weight < 500);
   }
 
   bool _checkValidation() {
-    if (!_isWeightValid() ||
-        _selectedTransport.isEmpty ||
-        !_readPrivacyPolicy ||
-        _name.trim().isEmpty) {
-      return false;
-    }
-    return true;
+    return (_isWeightValid() &&
+        _selectedTransport.isNotEmpty &&
+        _readPrivacyPolicy &&
+        _name.trim().isNotEmpty);
   }
 
   User _buildUser() {
@@ -127,6 +122,78 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
     }
 
     return result;
+  }
+
+  Future<void> handleContinue() async {
+    /* Matchmaking is only implemented on Android for now, so we show the modal
+       before navigating to the main screen. On iOS, we skip this step and go directly to the main screen. */
+
+    if (Platform.isAndroid) {
+      // The matchmaking process already asks for permissions on Android
+      String res = await showMatchmakingModal();
+
+      if (!mounted) return;
+
+      if (res != "proceed") {
+        ScaffoldMessenger.of(context).clearSnackBars();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error during matchmaking: $res. Please try again.'),
+          ),
+        );
+        return;
+      }
+
+      await showWatchModal(context);
+    }
+
+    if (Platform.isIOS) {
+      bool permissionGranted = await HealthService.requestPermissions();
+
+      if (!mounted) return;
+
+      debugPrint("HealthKit permission granted: $permissionGranted");
+
+      if (permissionGranted) {
+        debugPrint("HealthKit permissions granted.");
+      } else {
+        debugPrint(" HealthKit permissions denied.");
+
+        ScaffoldMessenger.of(context).clearSnackBars();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Permissions denied. Please enable HealthKit permissions in your device settings to continue.',
+            ),
+          ),
+        );
+
+        return;
+      }
+    }
+
+    if (!mounted) return;
+
+    User? user = await createUserProfile();
+
+    if (!mounted) return;
+
+    if (user != null) {
+      ref.read(userProvider.notifier).setUser(user);
+
+      if (!mounted) return;
+      context.goNamed(RouteNames.mainScreen);
+    } else {
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error creating user profile. Please try again.'),
+        ),
+      );
+    }
   }
 
   @override
@@ -545,52 +612,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
       width: double.infinity,
       height: 54,
       child: ElevatedButton(
-        onPressed: _checkValidation() && !_isLoading
-            ? () async {
-                /* Matchmaking is only implemented on Android for now, so we show the modal
-                  before navigating to the main screen. On iOS, we skip this step and go directly to the main screen. */
-
-                if (Platform.isAndroid) {
-                  String res = await showMatchmakingModal();
-
-                  if (!mounted) return;
-
-                  if (res != "proceed") {
-                    ScaffoldMessenger.of(context).clearSnackBars();
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Error during matchmaking: $res. Please try again.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
-                }
-
-                User? user = await createUserProfile();
-
-                if (!mounted) return;
-
-                if (user != null) {
-                  ref.read(userProvider.notifier).setUser(user);
-
-                  if (!mounted) return;
-                  context.goNamed(RouteNames.mainScreen);
-                } else {
-                  ScaffoldMessenger.of(context).clearSnackBars();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Error creating user profile. Please try again.',
-                      ),
-                    ),
-                  );
-                }
-              }
-            : null,
+        onPressed: _checkValidation() && !_isLoading ? handleContinue : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.focusedColor,
           foregroundColor: Colors.white,

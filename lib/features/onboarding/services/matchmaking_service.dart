@@ -9,8 +9,9 @@ class MatchmakingService {
 
   static Future<String> showMatchmakingModal() async {
     try {
-      final result = await platform
-          .invokeMethod<Map<dynamic, dynamic>>('showMatchmakingModal');
+      final result = await platform.invokeMethod<Map<dynamic, dynamic>>(
+        'showMatchmakingModal',
+      );
 
       switch (result?["status"]) {
         case "completed":

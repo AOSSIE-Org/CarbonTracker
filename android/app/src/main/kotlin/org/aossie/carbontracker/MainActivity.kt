@@ -38,7 +38,8 @@ class MainActivity : FlutterFragmentActivity() {
         HealthPermission.getReadPermission(DistanceRecord::class),
         HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
-        HealthPermission.getReadPermission(BloodPressureRecord::class)
+        HealthPermission.getReadPermission(BloodPressureRecord::class),
+        HealthPermission.getReadPermission(FloorsClimbedRecord::class),
     )
 
     // Launcher for the matchmaking flow. This will be used to start the matchmaking activity and handle its result.
@@ -94,9 +95,7 @@ class MainActivity : FlutterFragmentActivity() {
                         performMatchmaking()
                     } catch (e: Exception) {
                         pendingResult?.error(
-                            "MATCHMAKING_ERROR",
-                            e.message,
-                            null
+                            "MATCHMAKING_ERROR", e.message, null
                         )
                         pendingResult = null
                     }
@@ -170,9 +169,7 @@ class MainActivity : FlutterFragmentActivity() {
                             performMatchmaking()
                         } catch (e: Exception) {
                             pendingResult?.error(
-                                "MATCHMAKING_ERROR",
-                                e.message,
-                                null
+                                "MATCHMAKING_ERROR", e.message, null
                             )
                             pendingResult = null
                         }
@@ -218,7 +215,7 @@ class MainActivity : FlutterFragmentActivity() {
             // Matchmaking is not possible on this device.
 
             Log.d(
-                "HC", "matchmaking isn't possible. User may not have granted permissions."
+                "HC", "Matchmaking isn't possible. User may not have granted permissions."
             )
 
             pendingResult?.success(
