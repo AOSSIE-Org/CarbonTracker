@@ -27,11 +27,7 @@ void showInfoModal(BuildContext context, String title, String content) {
                 const SizedBox(height: 12),
                 Flexible(
                   child: SingleChildScrollView(
-                    child: Text(
-                      content,
-                      style: TextStyle(fontSize: 14),
-                      textAlign: TextAlign.justify,
-                    ),
+                    child: Text(content, style: TextStyle(fontSize: 14)),
                   ),
                 ),
                 const SizedBox(height: 16),

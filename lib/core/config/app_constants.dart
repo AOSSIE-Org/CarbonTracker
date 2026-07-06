@@ -5,7 +5,7 @@ class AppColors {
   // Private constructor to prevent instantiation
   AppColors._();
 
-  static const Color primaryColor = Color(0xFFFBFAEE);
+  static const Color primaryColor = Color(0xFFFCFBF2);
   static const Color secondaryColor = Color(0xFF5E6F00);
   static const Color subtitleText = Color(0xFF464839);
   static const Color minisculeText = Color(0xFF777868);
@@ -17,5 +17,7 @@ class AppColors {
   static const Color unselectedBorderColor = Color(0xFFC7C8B5);
   static const Color modalBackgroundColor = Color(0xFFF2F0E0);
   static const Color modalBorderColor = Color(0xFFD7D3BE);
-  static const Color metricsBackgroundColor = Color(0x0A9BAD50);
+  static const Color metricsBackgroundColor = Color(0x0F9BAD50);
+  static const Color oliveGreen = Color(0xFF93A360);
+  static const Color greyBorder = Color(0xFFEDEBDA);
 }

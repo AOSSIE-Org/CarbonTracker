@@ -22,6 +22,4 @@ class UserNotifier extends Notifier<User?> {
   Future<void> saveUser(User user) async {
     await _databaseHelper.insert('user', user);
   }
-
-
 }
