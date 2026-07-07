@@ -24,7 +24,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: screens[_currentIndex],
+      body: IndexedStack(index: _currentIndex, children: screens),
 
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,

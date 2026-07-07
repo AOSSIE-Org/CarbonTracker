@@ -15,9 +15,7 @@ class CarbonCalculator {
       case 'cycle':
         return distanceKm * footEmissionFactor;
       default:
-        throw Exception(
-          'Unsupported transport mode: $transportMode',
-        ); //  Remove this later
+        return distanceKm * baseEmissionFactor;
     }
   }
 

@@ -25,6 +25,7 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
 
   Future<void> _loadTripsData() async {
     List<Trip> trips = await ref.read(tripProvider.notifier).loadTrips();
+    if (!mounted) return;
     await ref.read(summaryProvider.notifier).loadSummary(trips);
   }
 
@@ -261,8 +262,8 @@ class _StatCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final totalEmitted = ref.watch(summaryProvider)?.totalCarbonEmitted;
-    final totalSaved = ref.watch(summaryProvider)?.totalCarbonSaved;
+    final totalEmitted = ref.watch(summaryProvider)?.totalCarbonEmitted ?? 0.0;
+    final totalSaved = ref.watch(summaryProvider)?.totalCarbonSaved ?? 0.0;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -288,8 +289,8 @@ class _StatCard extends ConsumerWidget {
           const SizedBox(height: 10),
           Text(
             type == Type.emitted
-                ? '${totalEmitted?.toStringAsFixed(2)} kg'
-                : '${totalSaved?.toStringAsFixed(2)} kg',
+                ? '${totalEmitted.toStringAsFixed(2)} kg'
+                : '${totalSaved.toStringAsFixed(2)} kg',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w600,

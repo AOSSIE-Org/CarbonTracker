@@ -1,4 +1,5 @@
 import 'package:carbon_tracker/database/models/trips.dart';
+import 'package:carbon_tracker/features/carbon/constants/weekday_constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:carbon_tracker/features/carbon/models/summary_model.dart';
@@ -35,38 +36,40 @@ class SummaryNotifier extends Notifier<Summary?> {
       now.month,
       now.day - now.weekday + 1,
     ); // Monday
-    DateTime endOfWeek = startOfWeek.add(Duration(days: 6)); // Sunday
+    DateTime startOfNextWeek = startOfWeek.add(Duration(days: 7));
 
     for (Trip trip in trips) {
-      if (trip.date.isBefore(startOfWeek) || trip.date.isAfter(endOfWeek)) {
+      if (trip.date.isBefore(startOfWeek) ||
+          !trip.date.isBefore(startOfNextWeek)) {
         // Skip trips not in the current week
         continue;
       }
 
+      final dayOfWeek = WeekdayConstants.days[trip.date.weekday - 1];
+      final emittedKg = trip.carbonEmitted / 1000;
+      final savedKg = trip.carbonSaved / 1000;
+
       if (trip.date.year == now.year &&
           trip.date.month == now.month &&
           trip.date.day == now.day) {
-        todayCarbonEmitted += trip.carbonEmitted;
+        todayCarbonEmitted += emittedKg;
       }
 
-      // 1 for Monday, 7 for Sunday
-      String dayOfWeek = days[trip.date.weekday - 1];
-      totalCarbonSaved += trip.carbonSaved;
-      totalCarbonEmitted += trip.carbonEmitted;
+      totalCarbonEmitted += emittedKg;
+      totalCarbonSaved += savedKg;
+
       weeklyData[dayOfWeek] = WeeklyData(
-        carbonEmitted:
-            (weeklyData[dayOfWeek]?.carbonEmitted ?? 0) + trip.carbonEmitted,
-        carbonSaved:
-            (weeklyData[dayOfWeek]?.carbonSaved ?? 0) + trip.carbonSaved,
+        carbonEmitted: (weeklyData[dayOfWeek]?.carbonEmitted ?? 0) + emittedKg,
+        carbonSaved: (weeklyData[dayOfWeek]?.carbonSaved ?? 0) + savedKg,
       );
     }
 
     // 2. Create a Summary object
 
     Summary summary = Summary(
-      totalCarbonEmitted: totalCarbonEmitted / 1000,
-      totalCarbonSaved: totalCarbonSaved / 1000,
-      todayCarbonEmitted: todayCarbonEmitted / 1000,
+      totalCarbonEmitted: totalCarbonEmitted,
+      totalCarbonSaved: totalCarbonSaved,
+      todayCarbonEmitted: todayCarbonEmitted,
       summaryData: weeklyData,
     );
 
