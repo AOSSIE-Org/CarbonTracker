@@ -12,6 +12,8 @@ class Trip extends BaseModel {
     required this.date,
     required this.distance,
     required this.transportMode,
+    // For now these are supported foot, bus, cycle, car
+    // metro, train can be added later
     required this.carbonEmitted,
     required this.carbonSaved,
   });
@@ -22,8 +24,8 @@ class Trip extends BaseModel {
       date: DateTime.fromMillisecondsSinceEpoch(map['date'] as int),
       distance: (map['distance'] as num).toDouble(),
       transportMode: map['transport_mode'],
-      carbonEmitted: (map['carbon_emitted'] as num).toDouble(),
-      carbonSaved: (map['carbon_saved'] as num).toDouble(),
+      carbonEmitted: map['carbon_emitted'],
+      carbonSaved: map['carbon_saved'],
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:carbon_tracker/features/carbon/screens/carbon_tracker.dart';
 import 'package:carbon_tracker/features/fitness/screens/fitness_metrics_screen.dart';
 import 'package:carbon_tracker/features/maps/screens/map.dart';
 import 'package:carbon_tracker/features/profile/screens/profile.dart';
@@ -13,14 +14,20 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  List<Widget> screens = [FitnessMetricsScreen(), MapScreen(), ProfileScreen()];
+  List<Widget> screens = [
+    FitnessMetricsScreen(),
+    CarbonTrackerScreen(),
+    MapScreen(),
+    ProfileScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: screens[_currentIndex],
+      body: IndexedStack(index: _currentIndex, children: screens),
 
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
@@ -31,6 +38,10 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center),
             label: 'Fitness',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.energy_savings_leaf),
+            label: 'Carbon',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),

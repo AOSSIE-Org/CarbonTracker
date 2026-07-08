@@ -1,3 +1,5 @@
+import 'package:carbon_tracker/features/carbon/data/demo_data.dart';
+import 'package:carbon_tracker/features/carbon/helpers/carbon_calculator.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:carbon_tracker/database/database_exceptions.dart';
@@ -247,23 +249,24 @@ class DatabaseHelper {
   // To initialize the database with some default trips data (for testing purposes)
 
   Future<void> initializeTrips() async {
-    List<Map<String, dynamic>> trips = [];
-
-    for (int i = 1; i <= 5; i++) {
-      trips.add({
-        'date': DateTime.now().millisecondsSinceEpoch,
-        'distance': 10.0 * i,
-        'transport_mode': i % 2 == 0 ? "car" : "bus",
-        'carbon_emitted': 2.5 * i,
-        'carbon_saved': 1.0 * i,
-      });
-    }
-
     try {
       final Database db = await getDB();
+      await clearTrips(); // Clear existing trips before inserting demo data
       await db.transaction((txn) async {
-        for (Map<String, dynamic> trip in trips) {
-          await txn.insert("trips", trip);
+        for (Map trip in trips) {
+          await txn.insert("trips", {
+            'date': trip['date'],
+            'distance': trip['distance'],
+            'transport_mode': trip['transport_mode'],
+            'carbon_emitted': CarbonCalculator.emission(
+              trip['transport_mode'],
+              trip['distance'],
+            ),
+            'carbon_saved': CarbonCalculator.savings(
+              trip['transport_mode'],
+              trip['distance'],
+            ),
+          });
         }
       });
     } on DatabaseException catch (e) {
