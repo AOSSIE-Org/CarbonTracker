@@ -1,4 +1,4 @@
-import 'package:carbon_tracker/features/map/modals/search_results.dart';
+import 'package:carbon_tracker/features/map/models/search_results.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:nominatim_flutter/model/request/request.dart';
