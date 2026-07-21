@@ -43,6 +43,17 @@ class CarbonChart extends ConsumerWidget {
                   color: Colors.grey.shade400,
                   width: 1,
                 ),
+
+                getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                  return BarTooltipItem(
+                    rod.toY.toStringAsFixed(2),
+                    const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  );
+                },
               ),
             ),
             barGroups: List<BarChartGroupData>.generate(

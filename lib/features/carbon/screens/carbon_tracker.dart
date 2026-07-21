@@ -1,7 +1,5 @@
 import 'package:carbon_tracker/core/config/app_constants.dart';
-import 'package:carbon_tracker/database/models/trips.dart';
 import 'package:carbon_tracker/features/carbon/providers/summary_provider.dart';
-import 'package:carbon_tracker/features/carbon/providers/trips_provider.dart';
 import 'package:carbon_tracker/features/carbon/widgets/carbon_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,17 +15,6 @@ class CarbonTrackerScreen extends ConsumerStatefulWidget {
 }
 
 class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _loadTripsData();
-  }
-
-  Future<void> _loadTripsData() async {
-    List<Trip> trips = await ref.read(tripProvider.notifier).loadTrips();
-    if (!mounted) return;
-    await ref.read(summaryProvider.notifier).loadSummary(trips);
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,3 +1,4 @@
+import 'package:carbon_tracker/features/map/models/search_options.dart';
 import 'package:carbon_tracker/features/map/models/search_results.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:geolocator/geolocator.dart';
@@ -75,11 +76,10 @@ class MapService {
     _configured = true;
   }
 
-  static Future<String> retrieveAddressFromCoordinates(
+  static Future<SearchResult?> retrieveAddressFromCoordinates(
     double latitude,
     double longitude,
   ) async {
-
     // Retrieve the address from the coordinates using Nominatim
 
     try {
@@ -100,15 +100,14 @@ class MapService {
         throw Exception("Address not found.");
       }
 
-      return address;
+      return SearchResult(locationString: address, lat: latitude, lon: longitude);
     } catch (e) {
       debugPrint("Error retrieving address: $e");
-      return "";
+      return null;
     }
   }
 
   static Future<List<NominatimResponse>> _makeSearch(String query) async {
-
     // Make a search request using Nominatim
 
     try {
@@ -135,41 +134,73 @@ class MapService {
     }
   }
 
-  static Future<SearchResult> queryPlaces(
+  static Future<SearchOptions> queryPlaces(
     String currentQuery,
     String destinationQuery,
-  ) async {
 
+  ) async {
     // Query places based on the current and destination queries
 
-    List<String?> currentLocations = [];
-    List<String?> destinationLocations = [];
+    List<SearchResult?> currentLocations = [];
+    List<SearchResult?> destinationsLocations = [];
 
     try {
       if (currentQuery.isEmpty) {
         Position currentLocationCoordinates = await getCurrentPosition();
-        String currentLocationAddress = await retrieveAddressFromCoordinates(
+        SearchResult? currentLocationAddress = await retrieveAddressFromCoordinates(
           currentLocationCoordinates.latitude,
           currentLocationCoordinates.longitude,
         );
 
-        currentLocations = [currentLocationAddress];
-      } else {
-        currentLocations = (await _makeSearch(
-          currentQuery,
-        )).map((result) => result.displayName).toList();
-      }
+        currentLocations = [
+          currentLocationAddress
+        ];
+      } else if (currentQuery.isNotEmpty && destinationQuery.isNotEmpty) {
+        currentLocations = (await _makeSearch(currentQuery))
+            .map(
+              (result) => SearchResult(
+                locationString: result.displayName,
+                lat: double.tryParse(result.lat ?? ""),
+                lon: double.tryParse(result.lon ?? ""),
+              ),
+            )
+            .toList();
 
-      destinationLocations = (await _makeSearch(
-        destinationQuery,
-      )).map((result) => result.displayName).toList();
+        destinationsLocations = (await _makeSearch(destinationQuery))
+            .map(
+              (result) => SearchResult(
+                locationString: result.displayName,
+                lat: double.tryParse(result.lat ?? ""),
+                lon: double.tryParse(result.lon ?? ""),
+              ),
+            )
+            .toList();
+      }
     } catch (e) {
       debugPrint("Error searching for places: $e");
     }
-
-    return SearchResult(
-      currentLocations: currentLocations,
-      destinationLocations: destinationLocations,
+    return SearchOptions(
+      currentLocationResults: currentLocations,
+      destinationLocationResults: destinationsLocations,
     );
+  }
+
+  static double calculateDistanceInKm({
+    required double startLatitude,
+
+    required double startLongitude,
+
+    required double endLatitude,
+
+    required double endLongitude,
+  }) {
+    final distanceInMeters = Geolocator.distanceBetween(
+      startLatitude,
+      startLongitude,
+      endLatitude,
+      endLongitude,
+    );
+
+    return distanceInMeters / 1000;
   }
 }
