@@ -234,6 +234,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
                           context,
                           "Why Some Health Metrics Aren’t Available",
                           metricsModalData,
+                          'Close',
                         );
                       },
                       child: const Text(

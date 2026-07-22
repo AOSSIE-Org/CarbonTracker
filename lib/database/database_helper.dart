@@ -1,5 +1,6 @@
 import 'package:carbon_tracker/features/carbon/data/demo_data.dart';
 import 'package:carbon_tracker/features/carbon/helpers/carbon_calculator.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:carbon_tracker/database/database_exceptions.dart';
@@ -165,6 +166,7 @@ class DatabaseHelper {
     try {
       final Database db = await getDB();
       List<Map<String, dynamic>> tripMap = await db.query("trips");
+      debugPrint("Queried trips: ${tripMap.length} records found");
 
       return tripMap.map((item) => Trip.fromMap(item)).toList();
     } on DatabaseException catch (e) {

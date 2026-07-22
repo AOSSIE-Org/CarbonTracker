@@ -11,14 +11,15 @@ class TripsNotifier extends Notifier<List<Trip>> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   @override
-  List<Trip> build() => [];
+  List<Trip> build() {
+    Future.microtask(() => loadTrips());
+    return [];
+  }
 
   Future<List<Trip>> loadTrips() async {
     try {
-      if (state.isEmpty) {
-        await _databaseHelper.initializeTrips();
-      }
       state = await _databaseHelper.queryAllTrips();
+      debugPrint("Loaded trips: ${state.length}");
       return state;
     } catch (e) {
       debugPrint("Error loading trips: $e");

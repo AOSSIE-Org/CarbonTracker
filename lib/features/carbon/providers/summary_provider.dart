@@ -1,3 +1,4 @@
+import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/database/models/trips.dart';
 import 'package:carbon_tracker/features/carbon/constants/weekday_constants.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,7 +11,13 @@ final summaryProvider = NotifierProvider<SummaryNotifier, Summary?>(
 
 class SummaryNotifier extends Notifier<Summary?> {
   @override
-  Summary? build() => null;
+  Summary? build() {
+    final trips = ref.watch(tripProvider);
+    if(trips.isEmpty) {
+      return null;
+    }
+    return _calculateSummary(trips);
+  }
 
   void setSummary(Summary summary) {
     state = summary;
@@ -20,14 +27,13 @@ class SummaryNotifier extends Notifier<Summary?> {
     return state;
   }
 
-  Future<void> loadSummary(List<Trip> trips) async {
+  Summary _calculateSummary(List<Trip> trips) {
     // 1. Calculate weekly totals
 
     double totalCarbonEmitted = 0.0;
     double totalCarbonSaved = 0.0;
     double todayCarbonEmitted = 0.0;
     Map<String, WeeklyData> weeklyData = {};
-    List<String> days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
     DateTime now = DateTime.now();
 
@@ -76,7 +82,6 @@ class SummaryNotifier extends Notifier<Summary?> {
     // 4. Assign it to state
 
     debugPrint('Summary updated: ${summary.summaryData}');
-
-    state = summary;
+    return summary;
   }
 }

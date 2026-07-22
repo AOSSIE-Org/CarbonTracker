@@ -237,6 +237,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
                             privacy.privacyPolicyInfo["title"] ??
                                 "Privacy Policy",
                             privacy.privacyPolicyInfo["description"] ?? "",
+                            'Close',
                           );
                         },
                         child: Text(
@@ -395,6 +396,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
                   context,
                   tracking.trackingModesInfo["title"] ?? "Tracking modes",
                   tracking.trackingModesInfo["description"] ?? "",
+                  'Close'
                 );
               },
               child: Text(
