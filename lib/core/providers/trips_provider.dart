@@ -1,6 +1,6 @@
 import 'package:carbon_tracker/database/database_helper.dart';
 import 'package:carbon_tracker/database/models/trips.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final tripProvider = NotifierProvider<TripsNotifier, List<Trip>>(
@@ -25,5 +25,15 @@ class TripsNotifier extends Notifier<List<Trip>> {
       debugPrint("Error loading trips: $e");
       return [];
     }
+  }
+
+  Future<void> deleteTrips() async {
+    try {
+      await _databaseHelper.clearTrips();
+      state = [];
+    } catch (e) {
+      debugPrint("Error loading trips: $e");
+    }
+    loadTrips();
   }
 }

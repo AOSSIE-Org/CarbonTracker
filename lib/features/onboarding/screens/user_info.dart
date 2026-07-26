@@ -1,20 +1,19 @@
 import 'dart:io';
 import 'package:carbon_tracker/core/config/route_constants.dart';
+import 'package:carbon_tracker/core/data/trackingOptions.dart';
+import 'package:carbon_tracker/core/data/transportPreferences.dart';
+import 'package:carbon_tracker/core/widgets/loader.dart';
 import 'package:carbon_tracker/database/models/user.dart';
 import 'package:carbon_tracker/features/fitness/services/health_service.dart';
+import 'package:carbon_tracker/features/onboarding/data/tracking_modes_info.dart';
 import 'package:carbon_tracker/features/onboarding/services/matchmaking_service.dart';
-import 'package:carbon_tracker/features/onboarding/providers/user_provider.dart';
+import 'package:carbon_tracker/core/providers/user_provider.dart';
 import 'package:carbon_tracker/features/onboarding/widgets/watch_modal.dart';
-import 'package:carbon_tracker/shared/widgets/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:carbon_tracker/core/config/app_constants.dart';
-import 'package:carbon_tracker/features/onboarding/data/onboarding_options.dart'
-    as options;
 import 'package:carbon_tracker/features/onboarding/data/privacy_policy_info.dart'
     as privacy;
-import 'package:carbon_tracker/features/onboarding/data/tracking_modes_info.dart'
-    as tracking;
 import 'package:carbon_tracker/core/widgets/modal.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,7 +30,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
   final Set<String> _selectedTransport = {};
 
   // Only refresh tracking is available for now, but this allows for easy expansion in the future
-  String _selectedTracking = 'Refresh Tracking';
+  trackingOption _selectedTracking = trackingOption.refresh;
 
   // Privacy policy agreement
   bool _readPrivacyPolicy = false;
@@ -73,7 +72,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
       name: _name.trim(),
       preferredTransports: _selectedTransport.toList(),
       frequentTransports: _selectedTransport.toList(),
-      trackingMode: _selectedTracking,
+      trackingMode: _selectedTracking.name,
       weight: _weight,
       sustainabilityThoughts: _sustainabilityThoughts.trim().isEmpty
           ? null
@@ -181,9 +180,6 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
     if (!mounted) return;
 
     if (user != null) {
-      ref.read(userProvider.notifier).setUser(user);
-
-      if (!mounted) return;
       context.goNamed(RouteNames.mainScreen);
     } else {
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -314,7 +310,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
         Wrap(
           spacing: 10,
           runSpacing: 10,
-          children: options.transportOptions.map((option) {
+          children: transportPreferences.map((option) {
             final isSelected = _selectedTransport.contains(option['label']);
             return GestureDetector(
               onTap: () {
@@ -394,8 +390,8 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
               onTap: () {
                 showInfoModal(
                   context,
-                  tracking.trackingModesInfo["title"] ?? "Tracking modes",
-                  tracking.trackingModesInfo["description"] ?? "",
+                  trackingModesInfo["title"] ?? "Tracking modes",
+                  trackingModesInfo["description"] ?? "",
                   'Close'
                 );
               },
@@ -413,12 +409,12 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
         ),
         const SizedBox(height: 14),
         Column(
-          children: options.trackingOptions.map((option) {
-            final isSelected = _selectedTracking == option['label'];
+          children: trackingOptions.map((option) {
+            final isSelected = _selectedTracking == option['value'];
             return GestureDetector(
               onTap: () {
                 setState(() {
-                  _selectedTracking = option['label'] as String;
+                  _selectedTracking = option['value'] as trackingOption;
                 });
               },
               child: AnimatedContainer(

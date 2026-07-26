@@ -57,4 +57,27 @@ class User extends BaseModel {
       'last_reset_year': lastResetYear,
     };
   }
+
+  User copyWith({
+    String? name,
+    List<dynamic>? preferredTransports,
+    List<dynamic>? frequentTransports,
+    String? trackingMode,
+    double? weight,
+    String? sustainabilityThoughts,
+    int? lastResetMonth,
+    int? lastResetYear,
+  }) {
+    return User(
+      id: id,
+      name: name ?? this.name,
+      preferredTransports: preferredTransports ?? this.preferredTransports,
+      frequentTransports: frequentTransports ?? this.frequentTransports,
+      trackingMode: trackingMode ?? this.trackingMode,
+      weight: weight ?? this.weight,
+      sustainabilityThoughts: sustainabilityThoughts ?? this.sustainabilityThoughts,
+      lastResetMonth: lastResetMonth ?? this.lastResetMonth,
+      lastResetYear: lastResetYear ?? this.lastResetYear,
+    );
+  }
 }

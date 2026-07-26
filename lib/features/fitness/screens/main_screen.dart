@@ -19,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
     List<Widget> screens = [
       FitnessMetricsScreen(),
       CarbonTrackerScreen(),
-      MapScreen(isActive: (_currentIndex == 2 ? true : false)),
+      MapScreen(isActive: _currentIndex == 2 ),
       ProfileScreen(),
     ];
 

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:carbon_tracker/features/fitness/data/fitness_data.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 
 class HealthService {

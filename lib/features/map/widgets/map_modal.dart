@@ -86,7 +86,7 @@ void showMapModal(
                   children: [
                     TextButton(
                       onPressed: () {
-                        onClose();
+                        onCompleted();
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
@@ -107,7 +107,7 @@ void showMapModal(
                     const SizedBox(width: 12),
                     TextButton(
                       onPressed: () {
-                        onCompleted();
+                        onClose();
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
