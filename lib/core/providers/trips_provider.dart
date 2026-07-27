@@ -34,6 +34,5 @@ class TripsNotifier extends Notifier<List<Trip>> {
     } catch (e) {
       debugPrint("Error loading trips: $e");
     }
-    loadTrips();
   }
 }

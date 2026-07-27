@@ -2,8 +2,10 @@ import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/core/data/trackingOptions.dart';
 import 'package:carbon_tracker/core/data/transportPreferences.dart';
 import 'package:carbon_tracker/core/providers/trips_provider.dart';
+import 'package:carbon_tracker/core/widgets/modal.dart';
 import 'package:carbon_tracker/database/models/user.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
+import 'package:carbon_tracker/features/profile/trips_delete_modal_data.dart';
 import 'package:carbon_tracker/features/profile/widgets/section_header.dart';
 import 'package:carbon_tracker/features/profile/widgets/tracking_option_tile.dart';
 import 'package:carbon_tracker/features/profile/widgets/transport_chip.dart';
@@ -32,7 +34,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final weight = double.tryParse(_weightController.text) ?? user.weight;
       await ref
           .read(userProvider.notifier)
-          .saveUser(
+          .updateUser(
             user.copyWith(
               weight: weight < 1 || weight > 500 ? user.weight : weight,
               sustainabilityThoughts: _sustainabilityController.text,
@@ -46,7 +48,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (user != null) {
       await ref
           .read(userProvider.notifier)
-          .saveUser(
+          .updateUser(
             user.copyWith(
               preferredTransports: selected
                   ? user.preferredTransports.where((e) => e != label).toList()
@@ -60,7 +62,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     {
       await ref
           .read(userProvider.notifier)
-          .saveUser(ref.read(userProvider)!.copyWith(trackingMode: type.name));
+          .updateUser(
+            ref.read(userProvider)!.copyWith(trackingMode: type.name),
+          );
     }
   }
 
@@ -379,7 +383,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     style: TextStyle(fontSize: 14, color: _redColor),
                   ),
                   onTap: () {
-                    ref.read(tripProvider.notifier).deleteTrips();
+                    showInfoModal(
+                      context,
+                      TripsDeleteDialogStrings.clearTripHistoryTitle,
+                      TripsDeleteDialogStrings.clearTripHistoryContent,
+                      'Continue',
+                      () => ref.read(tripProvider.notifier).deleteTrips(),
+                    );
                   },
                 ),
               ],

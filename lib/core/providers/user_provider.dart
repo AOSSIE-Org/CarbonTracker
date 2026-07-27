@@ -19,16 +19,9 @@ class UserNotifier extends Notifier<User?> {
     return state;
   }
 
-  Future<void> saveUser(User user) async {
-    final existingUser = await _databaseHelper.queryUser();
-
-    if (existingUser == null) {
-      await _databaseHelper.insert('user', user);
-    } else {
-      await _databaseHelper.updateData('user', user);
-    }
-
-    state = user;
+  Future<void> saveUser(User userObj) async {
+    await _databaseHelper.insert('user', userObj);
+    state = await loadUser();
   }
 
   Future<void> updateUser(User user) async {

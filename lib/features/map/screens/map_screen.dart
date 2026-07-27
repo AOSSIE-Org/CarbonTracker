@@ -60,6 +60,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       });
 
       Map res = await MapService.isPermissionGranted();
+      if(!mounted) return;
       if (!res['status']) {
         setState(() {
           _errMessage =
