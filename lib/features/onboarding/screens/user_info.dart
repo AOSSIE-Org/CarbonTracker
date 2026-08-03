@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:carbon_tracker/core/config/route_constants.dart';
-import 'package:carbon_tracker/core/data/trackingOptions.dart';
-import 'package:carbon_tracker/core/data/transportPreferences.dart';
+import 'package:carbon_tracker/core/data/tracking_options.dart';
+import 'package:carbon_tracker/core/data/transport_preferences.dart';
 import 'package:carbon_tracker/core/widgets/loader.dart';
 import 'package:carbon_tracker/database/models/user.dart';
 import 'package:carbon_tracker/features/fitness/services/health_service.dart';
@@ -30,7 +30,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
   final Set<String> _selectedTransport = {};
 
   // Only refresh tracking is available for now, but this allows for easy expansion in the future
-  trackingOption _selectedTracking = trackingOption.refresh;
+  TrackingOption _selectedTracking = TrackingOption.refresh;
 
   // Privacy policy agreement
   bool _readPrivacyPolicy = false;
@@ -414,7 +414,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
             return GestureDetector(
               onTap: () {
                 setState(() {
-                  _selectedTracking = option['value'] as trackingOption;
+                  _selectedTracking = option['value'] as TrackingOption;
                 });
               },
               child: AnimatedContainer(

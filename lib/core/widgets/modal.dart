@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:carbon_tracker/core/config/app_constants.dart';
 
-void showInfoModal(BuildContext context, String title, String content, String btnText, [VoidCallback? onClose]) {
+void showInfoModal(
+  BuildContext context,
+  String title,
+  String content,
+  String btnText, [
+  VoidCallback? onClose,
+]) {
   showDialog(
     context: context,
     builder: (context) {
@@ -22,6 +28,7 @@ void showInfoModal(BuildContext context, String title, String content, String bt
               children: [
                 Text(
                   title,
+                  textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
@@ -35,15 +42,18 @@ void showInfoModal(BuildContext context, String title, String content, String bt
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      if(onClose != null) {
+                      if (onClose != null) {
                         onClose();
-                      };
+                      }
                       Navigator.pop(context);
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor: AppColors.secondaryColor.withValues(alpha: 0.4),
-                      foregroundColor: AppColors.secondaryColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      backgroundColor: AppColors.secondaryColor,
+                      foregroundColor: AppColors.primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),

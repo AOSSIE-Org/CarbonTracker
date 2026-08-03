@@ -26,6 +26,6 @@ class CarbonCalculator {
     double hypotheticalEmission = distanceKm * baseEmissionFactor;
     final saved = hypotheticalEmission - emission(transportMode, distanceKm);
 
-    return saved < 0 ? 0 : saved;
+    return saved <= 0 ? 0 : saved;
   }
 }

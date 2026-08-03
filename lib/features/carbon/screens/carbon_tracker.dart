@@ -1,4 +1,6 @@
 import 'package:carbon_tracker/core/config/app_constants.dart';
+import 'package:carbon_tracker/core/widgets/modal.dart';
+import 'package:carbon_tracker/features/carbon/data/carbon_modal_data.dart';
 import 'package:carbon_tracker/features/carbon/providers/summary_provider.dart';
 import 'package:carbon_tracker/features/carbon/widgets/carbon_chart.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +17,6 @@ class CarbonTrackerScreen extends ConsumerStatefulWidget {
 }
 
 class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,13 +56,24 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
                 ],
               ),
               const SizedBox(height: 28),
-              const Text(
-                "Nature's Recommendations",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    "Nature's Recommendations",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  IconButton(
+                    onPressed: () {
+                      showInfoModal(context, carbonModalTitle, carbonModalData, "Close");
+                    },
+                    icon: const Icon(Icons.info_outline, color: Colors.black87),
+                  )
+                ],
               ),
               const SizedBox(height: 14),
               const _RecommendationCard(
@@ -86,77 +98,78 @@ class _CarbonEmittedTodayCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      children: [
-        Text(
-          'CARBON EMITTED TODAY',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-            color: AppColors.secondaryColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+    return
+        Column(
           children: [
             Text(
-              ref
-                      .watch(summaryProvider)
-                      ?.todayCarbonEmitted
-                      .toStringAsFixed(2) ??
-                  '0.00',
-              style: const TextStyle(
-                fontSize: 64,
+              'CARBON EMITTED TODAY',
+              style: TextStyle(
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.black87,
-                height: 1,
+                letterSpacing: 1.2,
+                color: AppColors.secondaryColor,
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12, left: 4),
-              child: Text(
-                'kg',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black54,
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  ref
+                          .watch(summaryProvider)
+                          ?.todayCarbonEmitted
+                          .toStringAsFixed(2) ??
+                      '0.00',
+                  style: const TextStyle(
+                    fontSize: 64,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                    height: 1,
+                  ),
                 ),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 12, left: 4),
+                  child: Text(
+                    'kg',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.metricsBackgroundColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.park_outlined,
+                    size: 16,
+                    color: AppColors.secondaryColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'travel greener today',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.secondaryColor,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.metricsBackgroundColor,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.park_outlined,
-                size: 16,
-                color: AppColors.secondaryColor,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'travel greener today',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.secondaryColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+        );
   }
 }
 

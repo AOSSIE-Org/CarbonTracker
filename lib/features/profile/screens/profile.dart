@@ -1,11 +1,12 @@
 import 'package:carbon_tracker/core/config/app_constants.dart';
-import 'package:carbon_tracker/core/data/trackingOptions.dart';
-import 'package:carbon_tracker/core/data/transportPreferences.dart';
+import 'package:carbon_tracker/core/data/tracking_options.dart';
+import 'package:carbon_tracker/core/data/transport_preferences.dart';
 import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/core/widgets/modal.dart';
 import 'package:carbon_tracker/database/models/user.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
-import 'package:carbon_tracker/features/profile/trips_delete_modal_data.dart';
+import 'package:carbon_tracker/features/profile/services/export_data_service.dart';
+import 'package:carbon_tracker/features/profile/data/trips_delete_modal_data.dart';
 import 'package:carbon_tracker/features/profile/widgets/section_header.dart';
 import 'package:carbon_tracker/features/profile/widgets/tracking_option_tile.dart';
 import 'package:carbon_tracker/features/profile/widgets/transport_chip.dart';
@@ -58,7 +59,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  Future<void> onTrackingSelection(trackingOption type) async {
+  Future<void> onTrackingSelection(TrackingOption type) async {
     {
       await ref
           .read(userProvider.notifier)
@@ -216,24 +217,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Row(
             children: [
               TrackingOptionTile(
-                selected: user.trackingMode == trackingOption.refresh.name,
+                selected: user.trackingMode == TrackingOption.refresh.name,
                 icon: Icons.refresh,
                 label: 'Refresh',
-                onTap: () => onTrackingSelection(trackingOption.refresh),
+                onTap: () => onTrackingSelection(TrackingOption.refresh),
               ),
               const SizedBox(width: 10),
               TrackingOptionTile(
-                selected: user.trackingMode == trackingOption.high.name,
+                selected: user.trackingMode == TrackingOption.high.name,
                 icon: Icons.bolt,
                 label: 'High',
-                onTap: () => onTrackingSelection(trackingOption.high),
+                onTap: () => onTrackingSelection(TrackingOption.high),
               ),
               const SizedBox(width: 10),
               TrackingOptionTile(
-                selected: user.trackingMode == trackingOption.eco.name,
+                selected: user.trackingMode == TrackingOption.eco.name,
                 icon: Icons.energy_savings_leaf,
                 label: 'Eco',
-                onTap: () => onTrackingSelection(trackingOption.eco),
+                onTap: () => onTrackingSelection(TrackingOption.eco),
               ),
             ],
           ),
@@ -372,8 +373,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     'Export Data',
                     style: TextStyle(fontSize: 14),
                   ),
-                  onTap: () {
-                    // To be implemented
+                  onTap: () async {
+                    await ExportDataService.shareFile();
                   },
                 ),
                 ListTile(

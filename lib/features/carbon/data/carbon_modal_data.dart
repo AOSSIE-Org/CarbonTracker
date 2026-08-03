@@ -1,0 +1,2 @@
+String carbonModalData = 'The impact of how we move is easy to overlook. A short walk instead of a ride, a cycle instead of a car, or simply choosing a cleaner way to get somewhere can change the amount of carbon we leave behind. Your health and your footprint are connected in more ways than you might think. This is a small space to notice those choices, understand their impact, and make more mindful ones over time.';
+String carbonModalTitle = 'A Closer Look at Your Carbon ';

@@ -21,7 +21,7 @@ class Trip extends BaseModel {
   factory Trip.fromMap(Map<String, dynamic> map) {
     return Trip(
       id: map['id'],
-      date: DateTime.fromMillisecondsSinceEpoch(map['date'] as int),
+      date: DateTime.fromMillisecondsSinceEpoch(map['date']  as int),
       distance: (map['distance'] as num).toDouble(),
       transportMode: map['transport_mode'],
       carbonEmitted: map['carbon_emitted'],
