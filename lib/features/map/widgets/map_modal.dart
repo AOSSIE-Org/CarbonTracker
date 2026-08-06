@@ -7,8 +7,8 @@ void showMapModal(
   double distance,
   String startLocation,
   String endLocation,
-  VoidCallback onClose,
-  VoidCallback onCompleted,
+  Future<void> Function() onClose,
+  Future<void> Function() onCompleted,
 ) {
   showDialog(
     context: context,
@@ -85,8 +85,11 @@ void showMapModal(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () {
-                        onCompleted();
+                      onPressed: () async {
+                        await onCompleted();
+
+                        if (!context.mounted) return;
+
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
@@ -106,8 +109,10 @@ void showMapModal(
                     ),
                     const SizedBox(width: 12),
                     TextButton(
-                      onPressed: () {
-                        onClose();
+                      onPressed: () async {
+                        await onClose();
+
+                        if (!context.mounted) return;
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(

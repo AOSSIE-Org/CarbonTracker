@@ -20,10 +20,7 @@ class MapService {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       // Location services are not enabled
-      return {
-        'status': false,
-        'message': 'Location services are disabled.',
-      };
+      return {'status': false, 'message': 'Location services are disabled.'};
     }
 
     permission = await Geolocator.checkPermission();
@@ -32,25 +29,18 @@ class MapService {
       if (permission == LocationPermission.denied) {
         // Permissions are denied
 
-        return {
-          'status': false,
-          'message': 'Location permissions are denied.',
-        };
+        return {'status': false, 'message': 'Location permissions are denied.'};
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       // Permissions are denied forever, handle appropriately.
-      return Future.error(
-        'Location permissions are permanently denied, we cannot request permissions.',
-      );
+      return {'status': false, 'message': 'Location permissions are denied.'};
     }
 
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
-    return {
-      'status': true,
-    };
+    return {'status': true};
   }
 
   static Future<Position> getCurrentPosition() async {
@@ -108,7 +98,11 @@ class MapService {
         throw Exception("Address not found.");
       }
 
-      return SearchResult(locationString: address, lat: latitude, lon: longitude);
+      return SearchResult(
+        locationString: address,
+        lat: latitude,
+        lon: longitude,
+      );
     } catch (e) {
       debugPrint("Error retrieving address: $e");
       return null;
@@ -145,7 +139,6 @@ class MapService {
   static Future<SearchOptions> queryPlaces(
     String currentQuery,
     String destinationQuery,
-
   ) async {
     // Query places based on the current and destination queries
 
@@ -155,14 +148,13 @@ class MapService {
     try {
       if (currentQuery.isEmpty) {
         Position currentLocationCoordinates = await getCurrentPosition();
-        SearchResult? currentLocationAddress = await retrieveAddressFromCoordinates(
-          currentLocationCoordinates.latitude,
-          currentLocationCoordinates.longitude,
-        );
+        SearchResult? currentLocationAddress =
+            await retrieveAddressFromCoordinates(
+              currentLocationCoordinates.latitude,
+              currentLocationCoordinates.longitude,
+            );
 
-        currentLocations = [
-          currentLocationAddress
-        ];
+        currentLocations = [currentLocationAddress];
       } else if (currentQuery.isNotEmpty && destinationQuery.isNotEmpty) {
         currentLocations = (await _makeSearch(currentQuery))
             .map(

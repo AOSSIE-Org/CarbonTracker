@@ -4,7 +4,6 @@ import 'package:carbon_tracker/database/database_helper.dart';
 import 'package:carbon_tracker/database/models/trips.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:io';
 
 class ExportDataService {
@@ -20,8 +19,7 @@ class ExportDataService {
           return t;
         }).toList(),
       );
-      // Save the JSON data
-      debugPrint(jsonData);
+
       return jsonData;
     } catch (e) {
       rethrow;
@@ -52,11 +50,16 @@ class ExportDataService {
   }
 
   static Future<void> shareFile() async {
+    File? file;
     try {
-      File file = await storeJsonToDir();
+      file = await storeJsonToDir();
       await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
     } catch (e) {
       rethrow;
+    } finally {
+      if (file != null && await file.exists()) {
+        await file.delete();
+      }
     }
   }
 }
