@@ -215,12 +215,16 @@ class DatabaseHelper {
     await db.transaction((txn) async {
       await txn.delete('trips');
 
-      await txn.update(
+      final affectedRows = await txn.update(
         'user',
         user.copyWith(lastResetMonth: month, lastResetYear: year).toMap(),
         where: 'id = ?',
         whereArgs: [1],
       );
+
+      if (affectedRows != 1) {
+        throw Exception('Failed to update user during monthly reset');
+      }
     });
   }
 
