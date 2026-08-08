@@ -26,6 +26,18 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+
+flutter_native_splash:
+  color: "#FCFBF2"
+  image: public/aossie-logo.png
+
+  android: true
+  ios: true
+
+  android_12:
+    color: "#FCFBF2"
+    image: public/aossie-logo.png
+
 dependencies:
   flutter:
     sdk: flutter
@@ -47,6 +59,7 @@ dependencies:
   flutter_osm_plugin: ^2.0.0+1
   share_plus: ^12.0.2
   path_provider: ^2.1.6
+  flutter_native_splash: ^2.4.8
 
 dev_dependencies:
   flutter_test:
