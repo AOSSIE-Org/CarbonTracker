@@ -69,13 +69,13 @@ Automatic cleanup of older trip history
 ## 💻 Tech Stack
 
 ### Frontend
+
 - Flutter / Dart
 - SQLite (sqflite)
 - Riverpod
 - Health Connect / HealthKit
 - Geolocation services
 - Wear OS
-
 
 ## ✅ Project Checklist
 
@@ -87,15 +87,6 @@ Automatic cleanup of older trip history
 ## 🔗 Repository Links
 
 1. [Main Repository](https://github.com/AOSSIE-Org/CarbonTracker.git)
-
-
-## 🏗️ Architecture Diagram
-
-TODO: Add your system architecture diagram here
-
-```
-[Architecture Diagram Placeholder]
-```
 
 ## 🏗️ Architecture Diagram
 
@@ -113,10 +104,6 @@ flowchart TD
 
     D --> F[JSON Export]
 ```
-
-## 🔄 User Flow
-
-## 🔄 User Flow
 
 ## 🔄 User Flow
 
@@ -163,11 +150,11 @@ flowchart TD
 4. **Managing Data**
     - User navigates to the Profile screen
     - Can export trip history as JSON or clear stored data at any time
+   
 5. **View Carbon Metrics**
     - Reviewing Carbon Insights
     - User navigates to the Carbon screen
     - Views daily and weekly carbon emissions and carbon savings
-
 
 ## 🍀 Getting Started
 

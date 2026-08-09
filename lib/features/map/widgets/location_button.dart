@@ -16,7 +16,7 @@ class LocateButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return isShowingMap
-        ? SizedBox.shrink()
+        ? const SizedBox.shrink()
         : ElevatedButton(
             onPressed: onPressed,
             style: ElevatedButton.styleFrom(

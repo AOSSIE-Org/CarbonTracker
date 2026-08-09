@@ -55,7 +55,7 @@ ask before writing tests in a specific style.
 
 Never commit API keys or secrets.
 Never add cloud storage, analytics, or telemetry that transmits user data off-device.
-This app is local-first by design (see PRIVACY_POLICY.md).
+This app is local-first by design (see PRIVACY.md).
 
 ## Git
 

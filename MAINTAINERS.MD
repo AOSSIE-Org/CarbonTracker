@@ -1,3 +1,5 @@
+# CarbonTracker Maintainers
+
 ## Ideators
 
 | Name          | GitHub Username | Discord Username | Project / Feature Idea          | Area / Focus                        | Proposal / Discussion Link                  |

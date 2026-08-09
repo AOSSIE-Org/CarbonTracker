@@ -59,7 +59,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         _errMessage = "";
       });
 
-      Map res = await MapService.isPermissionGranted();
+      final Map<String, dynamic> res = await MapService.isPermissionGranted();
       if(!mounted) return;
       if (!res['status']) {
         setState(() {
@@ -222,7 +222,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                           .loadTrips();
                                       resetState();
                                     },
-                                    () async {
+                                    () {
                                       resetState();
                                     },
                                   );

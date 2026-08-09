@@ -8,134 +8,154 @@ void showMapModal(
   String startLocation,
   String endLocation,
   Future<void> Function() onClose,
-  Future<void> Function() onCompleted,
+  VoidCallback onCompleted,
 ) {
+  bool _isLoading = false;
+
   showDialog(
     context: context,
     builder: (context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppColors.modalBorderColor),
-        ),
-        backgroundColor: AppColors.modalBackgroundColor,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.75,
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: AppColors.modalBorderColor),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Text(
-                    title,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
+            backgroundColor: AppColors.modalBackgroundColor,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.75,
                 ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Start Location",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.secondaryColor,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(startLocation, style: TextStyle(fontSize: 14)),
+                            const SizedBox(height: 12),
+                            Text(
+                              "End Location",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.secondaryColor,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(endLocation, style: TextStyle(fontSize: 14)),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Distance",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.secondaryColor,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "${distance.toStringAsFixed(2)} km",
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          "Start Location",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.secondaryColor,
+                        TextButton(
+                          onPressed: () {
+                            onCompleted();
+
+                            if (!context.mounted) return;
+
+                            Navigator.pop(context);
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: AppColors.secondaryColor
+                                .withValues(alpha: 0.6),
+                            foregroundColor: AppColors.primaryColor,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
+                          child: Text("Completed Trip"),
                         ),
-                        const SizedBox(height: 4),
-                        Text(startLocation, style: TextStyle(fontSize: 14)),
-                        const SizedBox(height: 12),
-                        Text(
-                          "End Location",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.secondaryColor,
+                        const SizedBox(width: 12),
+                        TextButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () async {
+                                  try {
+                                    setState(() {
+                                      _isLoading = true;
+                                    });
+                                    await onClose();
+                                  } catch (e) {
+                                    debugPrint('Error during onClose: $e');
+                                  }
+
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+
+                                  if (!context.mounted) return;
+                                  Navigator.pop(context);
+                                },
+                          style: TextButton.styleFrom(
+                            backgroundColor: AppColors.secondaryColor
+                                .withValues(alpha: 0.6),
+                            foregroundColor: AppColors.primaryColor,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(endLocation, style: TextStyle(fontSize: 14)),
-                        const SizedBox(height: 12),
-                        Text(
-                          "Distance",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.secondaryColor,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "${distance.toStringAsFixed(2)} km",
-                          style: TextStyle(fontSize: 14),
+                          child: Text("Cancel Trip"),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () async {
-                        await onCompleted();
-
-                        if (!context.mounted) return;
-
-                        Navigator.pop(context);
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: AppColors.secondaryColor.withValues(
-                          alpha: 0.6,
-                        ),
-                        foregroundColor: AppColors.primaryColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text("Completed Trip"),
-                    ),
-                    const SizedBox(width: 12),
-                    TextButton(
-                      onPressed: () async {
-                        await onClose();
-
-                        if (!context.mounted) return;
-                        Navigator.pop(context);
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: AppColors.secondaryColor.withValues(
-                          alpha: 0.6,
-                        ),
-                        foregroundColor: AppColors.primaryColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text("Cancel Trip"),
-                    ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       );
     },
   );

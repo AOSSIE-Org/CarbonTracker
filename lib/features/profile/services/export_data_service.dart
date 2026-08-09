@@ -51,12 +51,11 @@ class ExportDataService {
       await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
     } catch (e) {
       debugPrint("Error sharing file: $e");
-      return;
     }
 
     // File cleanup after sharing
     try {
-      if (await file.exists()) {
+      if (file != null && await file.exists()) {
         await file.delete();
       }
     } catch (e) {

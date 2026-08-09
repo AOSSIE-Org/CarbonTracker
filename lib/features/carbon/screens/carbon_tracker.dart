@@ -58,12 +58,14 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
               const SizedBox(height: 28),
               Row(
                 children: [
-                  const Text(
-                    "Nature's Recommendations",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                  const Expanded(
+                    child: Text(
+                      "Nature's Recommendations",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
 

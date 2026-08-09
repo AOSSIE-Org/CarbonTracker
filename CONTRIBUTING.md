@@ -93,7 +93,7 @@ Resolve any issues reported by `flutter doctor` before proceeding.
 
 2. **Clone Your Fork**
    ```bash
-   git clone https://github.com/AOSSIE-Org/CarbonTracker.git
+   git clone https://github.com/YOUR_USERNAME/CarbonTracker.git
    cd CarbonTracker
    ```
 
