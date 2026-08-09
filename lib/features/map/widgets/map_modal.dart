@@ -10,7 +10,7 @@ void showMapModal(
   Future<void> Function() onClose,
   VoidCallback onCompleted,
 ) {
-  bool _isLoading = false;
+  bool isLoading = false;
 
   showDialog(
     context: context,
@@ -111,28 +111,33 @@ void showMapModal(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: Text("Completed Trip"),
+                          child: const Text("Completed Trip"),
                         ),
                         const SizedBox(width: 12),
                         TextButton(
-                          onPressed: _isLoading
+                          onPressed: isLoading
                               ? null
                               : () async {
+                                  var succeeded = false;
                                   try {
                                     setState(() {
-                                      _isLoading = true;
+                                      isLoading = true;
                                     });
                                     await onClose();
+                                    succeeded = true;
                                   } catch (e) {
                                     debugPrint('Error during onClose: $e');
+                                  } finally {
+                                    if (context.mounted) {
+                                      setState(() {
+                                        isLoading = false;
+                                      });
+                                    }
                                   }
 
-                                  setState(() {
-                                    _isLoading = false;
-                                  });
-
-                                  if (!context.mounted) return;
-                                  Navigator.pop(context);
+                                  if (succeeded && context.mounted) {
+                                    Navigator.pop(context);
+                                  }
                                 },
                           style: TextButton.styleFrom(
                             backgroundColor: AppColors.secondaryColor
@@ -146,7 +151,7 @@ void showMapModal(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: Text("Cancel Trip"),
+                          child: const Text("Cancel Trip"),
                         ),
                       ],
                     ),
