@@ -1,7 +1,6 @@
 import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/database/models/trips.dart';
 import 'package:carbon_tracker/features/carbon/constants/weekday_constants.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:carbon_tracker/features/carbon/models/summary_model.dart';
 
@@ -79,9 +78,6 @@ class SummaryNotifier extends Notifier<Summary?> {
       summaryData: weeklyData,
     );
 
-    // 4. Assign it to state
-
-    debugPrint('Summary updated: ${summary.summaryData}');
     return summary;
   }
 }

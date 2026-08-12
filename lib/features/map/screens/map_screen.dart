@@ -56,11 +56,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
       setState(() {
         _isLoading = true;
+        _errMessage = "";
       });
-      if (!await MapService.isPermissionGranted()) {
+
+      Map res = await MapService.isPermissionGranted();
+      if(!mounted) return;
+      if (!res['status']) {
         setState(() {
           _errMessage =
-              "Something went wrong while fetching location permissions. Please check your device settings.";
+              res['message'] ??
+              "Something went wrong while checking location permissions.";
         });
         return;
       }
@@ -84,7 +89,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errMessage = e.toString();
+        _errMessage = "Error fetching current location: $e";
       });
     } finally {
       if (mounted) {
@@ -209,15 +214,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                     _currentLocationQuery!.locationString!,
                                     _destinationLocationQuery!.locationString!,
                                     () async {
-                                      resetState();
-                                    },
-                                    () async {
                                       await _tripRepository.cancelTrip(
                                         _currentTripId!,
                                       );
                                       await ref
                                           .read(tripProvider.notifier)
                                           .loadTrips();
+                                      resetState();
+                                    },
+                                    () async {
                                       resetState();
                                     },
                                   );
@@ -381,9 +386,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                                 ),
                                               );
 
-                                              await ref
+                                              final t = await ref
                                                   .read(tripProvider.notifier)
                                                   .loadTrips();
+
+                                              debugPrint(
+                                                "trips loaded ${t.length}",
+                                              );
 
                                               setState(() {
                                                 _currentTripId = id;

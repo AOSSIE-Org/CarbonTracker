@@ -20,4 +20,10 @@ class AppColors {
   static const Color metricsBackgroundColor = Color(0x0F9BAD50);
   static const Color oliveGreen = Color(0xFF93A360);
   static const Color greyBorder = Color(0xFFEDEBDA);
+  static const Color greenIconBg = Color(0x289BAD50);
+  static const Color greenIcon = Color(0xFF55650C);
+  static const Color greyIconBg = Color(0x28B0A296);
+  static const Color greyIcon = Color(0xFF685C52);
+  static const Color greenBorder = Color(0xFFC7C8B5);
+
 }

@@ -34,11 +34,11 @@ void showInfoModal(BuildContext context, String title, String content, String bt
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () => {
+                    onPressed: () {
                       if(onClose != null) {
-                        onClose(),
-                      },
-                      Navigator.pop(context),
+                        onClose();
+                      };
+                      Navigator.pop(context);
                     },
                     style: TextButton.styleFrom(
                       backgroundColor: AppColors.secondaryColor.withValues(alpha: 0.4),

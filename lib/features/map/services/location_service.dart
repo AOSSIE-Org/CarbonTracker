@@ -1,6 +1,6 @@
 import 'package:carbon_tracker/features/map/models/search_options.dart';
 import 'package:carbon_tracker/features/map/models/search_results.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:nominatim_flutter/model/request/request.dart';
 import 'package:nominatim_flutter/model/response/nominatim_response.dart';
@@ -12,7 +12,7 @@ class MapService {
 
   MapService._();
 
-  static Future<bool> isPermissionGranted() async {
+  static Future<Map<String, dynamic>> isPermissionGranted() async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -20,7 +20,10 @@ class MapService {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       // Location services are not enabled
-      return Future.error('Location services are disabled.');
+      return {
+        'status': false,
+        'message': 'Location services are disabled.',
+      };
     }
 
     permission = await Geolocator.checkPermission();
@@ -28,7 +31,11 @@ class MapService {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         // Permissions are denied
-        return Future.error('Location permissions are denied');
+
+        return {
+          'status': false,
+          'message': 'Location permissions are denied.',
+        };
       }
     }
 
@@ -41,7 +48,9 @@ class MapService {
 
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
-    return true;
+    return {
+      'status': true,
+    };
   }
 
   static Future<Position> getCurrentPosition() async {
@@ -67,7 +76,6 @@ class MapService {
     NominatimFlutter.instance.configureNominatim(
       useCacheInterceptor: true,
       maxStale: Duration(days: 7),
-      baseUrl: 'https://your-nominatim-server.com',
       userAgent: 'CarbonTracker/1.0 (org.aossie.carbontracker)',
       printOnSuccess: true,
       convertFormData: true,

@@ -1,5 +1,5 @@
 import 'package:carbon_tracker/core/config/route_constants.dart';
-import 'package:carbon_tracker/features/onboarding/providers/user_provider.dart';
+import 'package:carbon_tracker/core/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,7 +26,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       if (user == null) {
         context.goNamed(RouteNames.onboarding);
       } else {
-        ref.read(userProvider.notifier).setUser(user);
         context.goNamed(RouteNames.mainScreen);
       }
     } catch (e, st) {
