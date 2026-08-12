@@ -424,6 +424,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: TextButton(
               onPressed: () {
                 ref.read(userProvider.notifier).deleteUser();
+                ref.read(tripProvider.notifier).deleteTrips();
                 context.goNamed('onboarding');
               },
               child: const Text(

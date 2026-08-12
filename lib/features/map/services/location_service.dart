@@ -13,11 +13,11 @@ class MapService {
   MapService._();
 
   static Future<Map<String, dynamic>> isPermissionGranted() async {
-    bool serviceEnabled;
+
     LocationPermission permission;
 
     // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       // Location services are not enabled
       return {'status': false, 'message': 'Location services are disabled.'};
@@ -148,7 +148,7 @@ class MapService {
     try {
       if (currentQuery.isEmpty) {
         Position currentLocationCoordinates = await getCurrentPosition();
-        SearchResult? currentLocationAddress =
+        final SearchResult? currentLocationAddress =
             await retrieveAddressFromCoordinates(
               currentLocationCoordinates.latitude,
               currentLocationCoordinates.longitude,

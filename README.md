@@ -4,7 +4,7 @@
 <!-- Organization Logo -->
 <div align="center" style="display: flex; align-items: center; justify-content: center; gap: 16px;">
   <img alt="AOSSIE" src="public/aossie-logo.svg" width="175">
-  <img src="public/todo-project-logo.svg" width="175" />
+  <img src="brand/logo.svg" width="175" />
 </div>
 
 &nbsp;
@@ -12,7 +12,7 @@
 <!-- Organization Name -->
 <div align="center">
 
-[![Static Badge](https://img.shields.io/badge/aossie.org/TODO-228B22?style=for-the-badge&labelColor=FFC517)](https://TODO.aossie.org/)
+<!-- [![Static Badge](https://img.shields.io/badge/aossie.org/TODO-228B22?style=for-the-badge&labelColor=FFC517)](https://TODO.aossie.org/) -->
 
 <!-- Correct deployed url to be added -->
 
@@ -48,202 +48,170 @@
 ---
 
 <div align="center">
-<h1>TODO: Project Name</h1>
+<h1>CarbonTracker</h1>
 </div>
 
-[TODO](https://TODO.stability.nexus/) is a ... TODO: Project Description.
+CarbonTracker is a Flutter-based mobile application that helps users track their fitness activity and understand its environmental impact.
 
----
+The app follows a local-first and privacy-focused approach, keeping user, fitness, location, and trip data on the user's device whenever possible.
 
-## 🚀 Features
+## Features
 
-TODO: List your main features here:
-
-- **Feature 1**: Description
-- **Feature 2**: Description
-- **Feature 3**: Description
-- **Feature 4**: Description
-
----
+Track fitness and activity data
+Track trips and transportation modes
+Calculate carbon emissions and carbon savings
+View fitness and environmental insights
+Location-based trip tracking
+Wear OS support
+Export trip data as JSON
+Automatic cleanup of older trip history
 
 ## 💻 Tech Stack
 
-TODO: Update based on your project
-
 ### Frontend
-- React / Next.js / Flutter / React Native
-- TypeScript
-- TailwindCSS
 
-### Backend
-- Flask / FastAPI / Node.js / Supabase
-- Database: PostgreSQL / SQLite / MongoDB
-
-### AI/ML (if applicable)
-- LangChain / LangGraph / LlamaIndex
-- Google Gemini / OpenAI / Anthropic Claude
-- Vector Database: Weaviate / Pinecone / Chroma
-- RAG / Prompt Engineering / Agent Frameworks
-
-### Blockchain (if applicable)
-- Solidity / solana / cardano / ergo Smart Contracts
-- Hardhat / Truffle / foundry
-- Web3.js / Ethers.js / Wagmi
-- OpenZeppelin / alchemy / Infura
-
----
+- Flutter / Dart
+- SQLite (sqflite)
+- Riverpod
+- Health Connect / HealthKit
+- Geolocation services
+- Wear OS
 
 ## ✅ Project Checklist
 
-TODO: Complete applicable items based on your project type
-
-- [ ] **The protocol** (if applicable):
-   - [ ] has been described and formally specified in a paper.
-   - [ ] has had its main properties mathematically proven.
-   - [ ] has been formally verified.
-- [ ] **The smart contracts** (if applicable):
-   - [ ] were thoroughly reviewed by at least two knights of The Stable Order.
-   - [ ] were deployed to: [Add deployment details]
 - [ ] **The mobile app** (if applicable):
-   - [ ] has an _About_ page containing the Stability Nexus's logo and pointing to the social media accounts of the Stability Nexus.
-   - [ ] is available for download as a release in this repo.
-   - [ ] is available in the relevant app stores.
-- [ ] **The AI/ML components** (if applicable):
-   - [ ] LLM/model selection and configuration are documented.
-   - [ ] Prompts and system instructions are version-controlled.
-   - [ ] Content safety and moderation mechanisms are implemented.
-   - [ ] API keys and rate limits are properly managed.
-
----
+    - [ ] has an _About_ page containing the Aossie's logo and pointing to the social media accounts of the Aossie.
+    - [ ] is available for download as a release in this repo.
+    - [ ] is available in the relevant app stores.
 
 ## 🔗 Repository Links
 
-TODO: Update with your repository structure
-
-1. [Main Repository](https://github.com/AOSSIE-Org/TODO)
-2. [Frontend](https://github.com/AOSSIE-Org/TODO/tree/main/frontend) (if separate)
-3. [Backend](https://github.com/AOSSIE-Org/TODO/tree/main/backend) (if separate)
-
----
+1. [Main Repository](https://github.com/AOSSIE-Org/CarbonTracker.git)
 
 ## 🏗️ Architecture Diagram
 
-TODO: Add your system architecture diagram here
+```mermaid
+flowchart TD
+    A[Flutter UI] --> B[Riverpod State Management]
+    B --> C[Device Integrations]
+    B --> D[Local SQLite Database]
 
+    C --> C1[Health Connect / HealthKit]
+    C --> C2[Geolocation]
+
+    D --> E[Carbon Calculation Engine]
+    E --> A
+
+    D --> F[JSON Export]
 ```
-[Architecture Diagram Placeholder]
-```
-
-You can create architecture diagrams using:
-- [Draw.io](https://draw.io)
-- [Excalidraw](https://excalidraw.com)
-- [Lucidchart](https://lucidchart.com)
-- [Mermaid](https://mermaid.js.org) (for code-based diagrams)
-
-Example structure to include:
-- Frontend components
-- Backend services
-- Database architecture
-- External APIs/services
-- Data flow between components
-
----
 
 ## 🔄 User Flow
 
-TODO: Add user flow diagrams showing how users interact with your application
+```mermaid
+flowchart TD
+    A[Open App] --> B{First time?}
+    B -->|Yes| C[Onboarding: Name, Weight, Transport Preferences]
+    B -->|No| D[Dashboard]
+    C --> D
 
-```
-[User Flow Diagram Placeholder]
+    D --> M[Map Screen]
+    M --> E[Start Trip Tracking]
+    E --> F[App Records Location and Distance]
+    F --> G[Trip Ends]
+    G --> H[Carbon Emissions and Savings Calculated]
+    H --> D
+
+    D --> J[Fitness Screen: View Fitness Metrics]
+
+    D --> P[Profile Screen]
+    P --> K[Export Trip History as JSON]
+    P --> L[Clear Stored Data]
 ```
 
 ### Key User Journeys
 
-TODO: Document main user flows:
+1. **Onboarding**
+    - User opens the app for the first time
+    - Enters name, weight, and preferred transport modes
+    - Lands on the main dashboard
 
-1. **User Journey 1**: Description
-   - Step 1
-   - Step 2
-   - Step 3
+2. **Logging a Trip**
+    - User navigates to the Map screen
+    - Starts trip tracking
+    - App records location and distance in the background
+    - User ends the trip
+    - App calculates carbon emissions and savings
+    - Results appear back on the dashboard
 
-2. **User Journey 2**: Description
-   - Step 1
-   - Step 2
-   - Step 3
+3. **Reviewing Fitness Metrics**
+    - User navigates to the Fitness screen
+    - Views fitness data such as steps, distance, and activity insights
 
-3. **User Journey 3**: Description
-   - Step 1
-   - Step 2
-   - Step 3
+4. **Managing Data**
+    - User navigates to the Profile screen
+    - Can export trip history as JSON or clear stored data at any time
+   
+5. **View Carbon Metrics**
+    - Reviewing Carbon Insights
+    - User navigates to the Carbon screen
+    - Views daily and weekly carbon emissions and carbon savings
 
----
-
-## �🍀 Getting Started
+## 🍀 Getting Started
 
 ### Prerequisites
 
-TODO: List what developers need installed
+Before setting up CarbonTracker, make sure you have the following installed:
 
-- Node.js 18+ / Python 3.9+ / Flutter SDK
-- npm / yarn / pnpm
-- [Any specific tools or accounts needed]
+- Flutter
+- Dart (included with Flutter)
+- Android Studio or another Flutter-supported development environment
+- An Android/iOS emulator or a physical device
+
+You can verify your Flutter installation by running:
+
+```bash
+flutter doctor
+```
+
+Resolve any issues reported by `flutter doctor` before proceeding.
 
 ### Installation
-
-TODO: Provide detailed setup instructions
 
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/AOSSIE-Org/TODO.git
-cd TODO
+git clone https://github.com/AOSSIE-Org/CarbonTracker.git
+cd CarbonTracker
 ```
 
 #### 2. Install Dependencies
 
 ```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
+flutter pub get
 ```
 
-#### 3. Configure Environment Variables(.env.example)
+#### 3. Run the App
 
-Create a `.env` file in the root directory:
-
-```env
-# Add your environment variables here
-API_KEY=your_api_key
-DATABASE_URL=your_database_url
-```
-
-#### 4. Run the Development Server
+First, check that Flutter can detect your available devices:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+flutter devices
 ```
 
-#### 5. Open your Browser
+Then run the application with:
 
-Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
+```bash
+flutter run
+```
 
-For detailed setup instructions, please refer to our [Installation Guide](./docs/INSTALL_GUIDE.md) (if you have one).
-
----
+You can run the project directly from Android Studio or another IDE with Flutter support.
 
 ## 📱 App Screenshots
 
-TODO: Add screenshots showcasing your application
-
-|  |  |  |
-|---|---|---|
-| Screenshot 1 | Screenshot 2 | Screenshot 3 |
+|                                                         |                                                        |                                                          |
+|---------------------------------------------------------|--------------------------------------------------------|----------------------------------------------------------|
+| ![Onboarding](assets/screenshots/onboarding_screen.PNG) | ![Dashboard](assets/screenshots/user_info_screen.PNG)  | ![Fitness Screen](assets/screenshots/fitness_screen.PNG) |
+| ![Map Screen](assets/screenshots/map_screen.PNG)        | ![Carbon Screen](assets/screenshots/carbon_screen.PNG) | ![Profile Screen](assets/screenshots/profile_screen.PNG) |
 
 ---
 
@@ -253,16 +221,9 @@ TODO: Add screenshots showcasing your application
 
 Thank you for considering contributing to this project! Contributions are highly appreciated and welcomed. To ensure smooth collaboration, please refer to our [Contribution Guidelines](./CONTRIBUTING.md).
 
----
-
 ## ✨ Maintainers
 
-TODO: Add maintainer information
-
-- [Maintainer Name](https://github.com/username)
-- [Maintainer Name](https://github.com/username)
-
----
+- [Aneesa Fatima](https://github.com/aneesafatima)
 
 ## 📍 License
 
@@ -273,8 +234,8 @@ See the [LICENSE](LICENSE) file for details.
 
 ## 💪 Thanks To All Contributors
 
-Thanks a lot for spending your time helping TODO grow. Keep rocking 🥂
+Thanks a lot for spending your time helping CarbonTracker grow. Keep rocking 🥂
 
-[![Contributors](https://contrib.rocks/image?repo=AOSSIE-Org/TODO)](https://github.com/AOSSIE-Org/TODO/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=AOSSIE-Org/CarbonTracker)](https://github.com/AOSSIE-Org/TODO/graphs/contributors)
 
-© 2025 AOSSIE 
+© 2026 AOSSIE
