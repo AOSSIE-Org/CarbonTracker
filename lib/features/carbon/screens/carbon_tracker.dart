@@ -1,4 +1,6 @@
 import 'package:carbon_tracker/core/config/app_constants.dart';
+import 'package:carbon_tracker/core/widgets/modal.dart';
+import 'package:carbon_tracker/features/carbon/data/carbon_modal_data.dart';
 import 'package:carbon_tracker/features/carbon/providers/summary_provider.dart';
 import 'package:carbon_tracker/features/carbon/widgets/carbon_chart.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +17,6 @@ class CarbonTrackerScreen extends ConsumerStatefulWidget {
 }
 
 class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,13 +56,30 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
                 ],
               ),
               const SizedBox(height: 28),
-              const Text(
-                "Nature's Recommendations",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    "Nature's Recommendations",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  IconButton(
+                    onPressed: () {
+                      showInfoModal(
+                        context,
+                        carbonModalTitle,
+                        carbonModalData,
+                        "Close",
+                      );
+                    },
+                    tooltip: 'More information about carbon footprint',
+                    icon: const Icon(Icons.info_outline, color: Colors.black87),
+                  ),
+                ],
               ),
               const SizedBox(height: 14),
               const _RecommendationCard(

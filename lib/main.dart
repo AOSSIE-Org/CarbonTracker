@@ -6,9 +6,13 @@ import 'core/config/app_constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   final dbHelper = DatabaseHelper();
-  await _checkAndResetMonthlyData(dbHelper);
+
+  try {
+    await _checkAndResetMonthlyData(dbHelper);
+  } catch (e) {
+    debugPrint('Error during initialization: $e');
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -22,11 +26,7 @@ Future<void> _checkAndResetMonthlyData(DatabaseHelper dbHelper) async {
       user.lastResetMonth != now.month || user.lastResetYear != now.year;
 
   if (needsReset) {
-    await dbHelper.clearTrips();
-    await dbHelper.updateData(
-      'user',
-      user.copyWith(lastResetMonth: now.month, lastResetYear: now.year),
-    );
+    await dbHelper.resetMonthlyData(user, now.month, now.year);
   }
 }
 

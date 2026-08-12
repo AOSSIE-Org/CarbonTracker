@@ -207,6 +207,27 @@ class DatabaseHelper {
     }
   }
 
+  // To reset monthly data (trips and user reset month/year) when a new month starts
+
+  Future<void> resetMonthlyData(User user, int month, int year) async {
+    final Database db = await getDB();
+
+    await db.transaction((txn) async {
+      await txn.delete('trips');
+
+      final affectedRows = await txn.update(
+        'user',
+        user.copyWith(lastResetMonth: month, lastResetYear: year).toMap(),
+        where: 'id = ?',
+        whereArgs: [1],
+      );
+
+      if (affectedRows != 1) {
+        throw Exception('Failed to update user during monthly reset');
+      }
+    });
+  }
+
   // To reset the database (for testing purposes)
 
   Future<void> resetDB() async {
