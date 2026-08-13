@@ -31,7 +31,7 @@ class OnboardingScreen extends StatelessWidget {
                   const SizedBox(height: 30),
 
                   const Text(
-                    'EcoTrackr',
+                    'CarbonTracker',
                     style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.w600,
