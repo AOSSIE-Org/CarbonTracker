@@ -210,7 +210,7 @@ reviews:
         - Invalid or unavailable external data
         - Network failure behavior
 
-    # Review mapping and geolocation Dart code with a focus on correctness, privacy, and reliability.
+    # Review geolocation Dart code with a focus on correctness, privacy, and reliability.
 
     - path: "lib/**/*location*.dart"
 
@@ -263,22 +263,6 @@ reviews:
         - Async behavior
 
         Do not demand tests for trivial UI or boilerplate.
-
-    # Review Android native code for meaningful issues related to Flutter integration, permissions, manifests, Gradle configuration, services, or security.
-
-    - path: "android/**"
-      instructions: >
-        Only flag meaningful issues related to Flutter Android integration,
-        permissions, manifests, Gradle configuration, services, or security.
-        Avoid unnecessary native-platform refactoring.
-
-    # Review iOS native code for meaningful issues related to Flutter integration, permissions, Info.plist configuration, platform capabilities, or security.
-
-    - path: "ios/**"
-      instructions: >
-        Only flag meaningful issues related to Flutter iOS integration,
-        permissions, Info.plist configuration, platform capabilities, or security.
-        Avoid unnecessary native-platform refactoring.
 
     # Review documentation files for correctness, clarity, consistency with the actual application, and broken or misleading instructions.
 
