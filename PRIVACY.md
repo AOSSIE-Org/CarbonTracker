@@ -24,11 +24,7 @@ You can deny or revoke permissions at any time through your device settings. Som
 
 ## Watch Connectivity
 
-If you connect a compatible Android smartwatch, CarbonTracker can communicate directly between your watch and phone.
-
-Fitness information transferred between the watch and phone does not pass through our servers and is not stored in our cloud.
-
-CarbonTracker may also receive fitness data from non-Android smartwatches through their associated wearable applications, when those applications are connected to Android Health Connect or Apple HealthKit.
+CarbonTracker may also receive fitness data from smartwatches through their associated wearable applications, when those applications are connected to Android Health Connect or Apple HealthKit.
 
 The collection, processing, or storage of your information by these third-party wearable applications is governed by their respective privacy policies. CarbonTracker does not control the privacy practices of these third-party applications.
 
