@@ -1,14 +1,18 @@
-import 'package:carbon_tracker/database/database_helper.dart';
-import 'package:flutter/material.dart';
+import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/core/config/app_router.dart';
+import 'package:carbon_tracker/database/database_helper.dart';
+import 'package:carbon_tracker/generated/app_localizations.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/config/app_constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final dbHelper = DatabaseHelper();
 
   try {
+    // Open the database at startup so later reads/writes are not racing a
+    // null singleton (getDB initializes lazily only on first query).
+    await dbHelper.getDB();
     await _checkAndResetMonthlyData(dbHelper);
   } catch (e) {
     debugPrint('Error during initialization: $e');
@@ -33,12 +37,13 @@ Future<void> _checkAndResetMonthlyData(DatabaseHelper dbHelper) async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Carbon Tracker',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primaryColor),
       ),
