@@ -392,7 +392,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
                   context,
                   trackingModesInfo["title"] ?? "Tracking modes",
                   trackingModesInfo["description"] ?? "",
-                  'Close'
+                  'Close',
                 );
               },
               child: Text(
@@ -441,18 +441,14 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
                     Icon(
                       option['icon'] as IconData,
                       size: 22,
-                      color: isSelected
-                          ? AppColors.focusedColor
-                          : AppColors.textDark,
+                      color: isSelected ? Colors.white : AppColors.textDark,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       option['label'] as String,
                       style: TextStyle(
                         fontSize: 15,
-                        color: isSelected
-                            ? AppColors.focusedColor
-                            : AppColors.textDark,
+                        color: isSelected ? Colors.white : AppColors.textDark,
                       ),
                     ),
                   ],
@@ -492,7 +488,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
             style: TextStyle(fontSize: 15, color: AppColors.textDark),
             decoration: InputDecoration(
               hintText: 'e.g. 75',
-              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+              hintStyle: TextStyle(color: Colors.grey.shade700, fontSize: 15),
               suffixText: 'kg',
               suffixStyle: TextStyle(color: Color(0xFF6B6B6B), fontSize: 15),
               border: InputBorder.none,
@@ -545,7 +541,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
             style: TextStyle(fontSize: 15, color: AppColors.textDark),
             decoration: InputDecoration(
               hintText: 'e.g. John Doe',
-              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+              hintStyle: TextStyle(color: Colors.grey.shade700, fontSize: 15),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -590,7 +586,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
             style: TextStyle(fontSize: 15, color: AppColors.textDark),
             decoration: InputDecoration(
               hintText: 'What does sustainability mean to you?',
-              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+              hintStyle: TextStyle(color: Colors.grey.shade700, fontSize: 14),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.all(16),
             ),
