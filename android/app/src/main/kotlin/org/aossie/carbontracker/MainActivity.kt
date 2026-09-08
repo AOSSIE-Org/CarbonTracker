@@ -13,10 +13,12 @@ import androidx.health.connect.client.matchmaking.MatchmakingRequest
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.*
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.wearable.Wearable
 import io.flutter.embedding.android.FlutterFragmentActivity
 
 
 import kotlinx.coroutines.launch
+import org.aossie.carbontracker.channels.WearChannel
 
 class MainActivity : FlutterFragmentActivity() {
 
@@ -27,7 +29,8 @@ class MainActivity : FlutterFragmentActivity() {
        health applications and services.
     */
 
-    private lateinit var channel: MethodChannel
+    private lateinit var matchmakingChannel: MethodChannel
+    private lateinit var wearChannel: MethodChannel
 
     private lateinit var client: HealthConnectClient
 
@@ -132,11 +135,13 @@ class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        channel = MethodChannel(
+        matchmakingChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger, "org.aossie.carbon_tracker/matchmaking"
         )
 
-        channel.setMethodCallHandler { call, result ->
+        WearChannel.initialize(flutterEngine)
+        WearChannel.setMethodHandler(this)
+        matchmakingChannel.setMethodCallHandler { call, result ->
 
             pendingResult = result
 
@@ -182,6 +187,8 @@ class MainActivity : FlutterFragmentActivity() {
                 result.notImplemented()
             }
         }
+
+
     }
 
 
