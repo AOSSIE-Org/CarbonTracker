@@ -7,6 +7,7 @@ import 'package:carbon_tracker/features/fitness/services/health_service.dart';
 import 'package:carbon_tracker/features/fitness/widgets/activity_card.dart';
 import 'package:carbon_tracker/features/fitness/widgets/stat_card.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
+import 'package:carbon_tracker/wearable/watch_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -28,8 +29,13 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   @override
   void initState() {
     super.initState();
-    getStats();
+    isWatchConnected();
+    // getStats();
   }
+
+  Future<void> isWatchConnected () async{
+    await WatchService.checkWatchConnection();
+}
 
   // Fetch health data and update the state
 

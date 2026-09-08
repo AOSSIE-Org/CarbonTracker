@@ -1,4 +1,5 @@
 import 'package:carbon_tracker/database/database_helper.dart';
+import 'package:carbon_tracker/wearable/watch_service.dart';
 import 'package:flutter/material.dart';
 import 'package:carbon_tracker/core/config/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'core/config/app_constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  WatchService().initialize(); // Initialize the watch service to listen for messages
   final dbHelper = DatabaseHelper();
 
   try {
