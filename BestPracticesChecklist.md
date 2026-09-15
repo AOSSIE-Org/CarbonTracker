@@ -53,7 +53,7 @@
 - [x] 🔴 **documentation_basics** — Basic documentation exists for the software (README, Wiki, or docs folder).
     - *Evidence URL: https://github.com/AOSSIE-Org/CarbonTracker/blob/main/README.md
 
-- [ ] 🔴 **documentation_interface** — Reference documentation describes the external interface (API inputs/outputs, CLI flags, config schema, etc.).
+- [~] 🔴 **documentation_interface** — Reference documentation describes the external interface (API inputs/outputs, CLI flags, config schema, etc.).
     - *Evidence URL:* `[ ]` N/A — *Justification:* CarbonTracker is a mobile application and does not expose a public API, CLI, or external configuration interface requiring reference documentation.
 
 ### Other Basics
@@ -89,7 +89,7 @@
 - [x] 🔴 **release_notes** — Each release includes human-readable release notes summarizing major changes. Raw `git log` output is NOT acceptable.
     - *Evidence URL:* https://github.com/AOSSIE-Org/CarbonTracker/releases/tag/v0.1.0
 
-- [ ] 🔴 **release_notes_vulns** — Release notes identify every publicly known vulnerability (with CVE) fixed in that release.
+- [~] 🔴 **release_notes_vulns** — Release notes identify every publicly known vulnerability (with CVE) fixed in that release.
     - *Evidence URL:* `[ ]` N/A — *Justification (no publicly known vulns / users can't self-update):*
 
 ---
@@ -118,10 +118,10 @@
 - [ ] 🔴 **vulnerability_report_process** — A vulnerability reporting process is documented (e.g., `SECURITY.md`).
     - *Evidence URL:*
 
-- [ ] 🟡 **vulnerability_report_private** — If private vulnerability reporting is supported, the method for private submission is documented.
-    - *Evidence URL:* `[ ]` N/A — *Justification:*
+- [~] 🟡 **vulnerability_report_private** — If private vulnerability reporting is supported, the method for private submission is documented.
+    - *Evidence URL:* `[ ]` N/A — *Justification:* The project does not currently support a separate private vulnerability-reporting channel (e.g. no GitHub Security Advisories or dedicated email); vulnerabilities are reported through the same public issue tracker as other bugs
 
-- [ ~ ] 🔴 **vulnerability_report_response** — Initial response to any vulnerability report received in the last 6 months was within 14 days.
+- [~] 🔴 **vulnerability_report_response** — Initial response to any vulnerability report received in the last 6 months was within 14 days.
     - *Self-certification note:* `[ ]` N/A — *Justification (no reports received):*
 
 ---
@@ -136,7 +136,7 @@
 - [x] 🔵 **build_common_tools** — Common build tools are used (npm, pip, cargo, make, gradle, etc.). *(SUGGESTED)*
     - *Evidence URL:* https://github.com/AOSSIE-Org/CarbonTracker/blob/main/android/build.gradle.kts
 
-- [ ] 🟡 **build_floss_tools** — The project can be built using only FLOSS tools.
+- [~] 🟡 **build_floss_tools** — The project can be built using only FLOSS tools.
     - *Note:* `[ ]` N/A
 
 ### Automated Testing
