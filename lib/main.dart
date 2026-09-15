@@ -7,7 +7,8 @@ import 'core/config/app_constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  WatchService().initialize(); // Initialize the watch service to listen for messages
+  WatchService()
+      .initialize(); // Initialize the watch service to listen for messages
   final dbHelper = DatabaseHelper();
 
   try {

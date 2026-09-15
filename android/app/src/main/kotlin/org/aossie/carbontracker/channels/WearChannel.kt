@@ -23,87 +23,161 @@ object WearChannel {
     fun setMethodHandler(context: Context) {
 
         methodChannel.setMethodCallHandler { call, result ->
+            val nodeClient = Wearable.getNodeClient(context)
 
-            if (call.method == "checkWearConnection") {
+            GoogleApiAvailability.getInstance()
+                .checkApiAvailability(nodeClient)
+                .addOnSuccessListener {
 
-                val nodeClient = Wearable.getNodeClient(context)
+                    nodeClient.connectedNodes
+                        .addOnSuccessListener { nodes ->
 
-                GoogleApiAvailability.getInstance()
-                    .checkApiAvailability(nodeClient)
-                    .addOnSuccessListener {
+                            if (nodes.isNotEmpty()) {
 
-                        nodeClient.connectedNodes
-                            .addOnSuccessListener { nodes ->
+                                val node = nodes.first()
 
-                                if (nodes.isEmpty()) {
-                                    result.success(false)
-                                    return@addOnSuccessListener
-                                }
+                                if (call.method == "getHeartRate") {
 
-                                Log.d(
-                                    "WearChannel",
-                                    "Connected nodes: ${nodes.map { it.isNearby }}"
-                                )
 
-                                nodes
-                                    .filter { it.isNearby }
-                                    .forEach { node ->
+                                    Log.d(
+                                        "WearChannel",
+                                        "Sending heart rate request to node: ${node.displayName}"
+                                    )
 
-                                        Log.d(
-                                            "WearChannel",
-                                            "Sending request to node: ${node.displayName}"
+                                    Wearable.getMessageClient(context)
+                                        .sendMessage(
+                                            node.id,
+                                            "/requestHeartRate",
+                                            ByteArray(0)
                                         )
-                                        Wearable.getMessageClient(context)
-                                            .sendMessage(
-                                                node.id,
-                                                "/requestWatchData",
-                                                ByteArray(0)
+                                        .addOnSuccessListener {
+                                            Log.d(
+                                                "WearChannel",
+                                                "Sent /requestHeartRate successfully"
                                             )
-                                            .addOnSuccessListener {
-                                                Log.d(
-                                                    "WearChannel",
-                                                    "Message sent successfully to ${node.displayName}"
-                                                )
-                                            }
-                                            .addOnFailureListener { exception ->
-                                                Log.e(
-                                                    "WearChannel",
-                                                    "Failed to send message to ${node.displayName}",
-                                                    exception
-                                                )
+                                            result.success(true)
+                                        }
+                                        .addOnFailureListener {
+                                            Log.e(
+                                                "WearChannel",
+                                                "Failed to send /requestHeartRate",
+                                                it
+                                            )
 
-                                            }
-                                    }
+                                            result.error(
+                                                "WearChannel",
+                                                "Failed to send /requestHeartRate: ${it.message}",
+                                                null
+                                            )
+                                        }
 
-                                result.success(true)
-                            }
-                            .addOnFailureListener { exception ->
+                                } else if (call.method == "getExerciseData") {
+                                    Log.d(
+                                        "WearChannel",
+                                        "Sending exercise data request to node: ${node.displayName}"
+                                    )
 
+                                    Wearable.getMessageClient(context)
+                                        .sendMessage(
+                                            node.id,
+                                            "/requestExerciseData",
+                                            ByteArray(0)
+                                        )
+                                        .addOnSuccessListener {
+                                            Log.d(
+                                                "WearChannel",
+                                                "Sent /requestExerciseData successfully"
+                                            )
+                                        }
+                                        .addOnFailureListener {
+                                            Log.e(
+                                                "WearChannel",
+                                                "Failed to send /requestExerciseData",
+                                                it
+                                            )
+                                        }
+                                } else {
+                                    result.notImplemented()
+                                }
+                            } else {
                                 result.error(
-                                    "WEAR_ERROR",
-                                    "Could not check watch connection: ${exception.message}",
+                                    "WearChannel",
+                                    "No connected nodes found",
                                     null
                                 )
                             }
-                    }
-                    .addOnFailureListener { exception ->
+                        }
 
-                        result.error(
-                            "WEAR_API_UNAVAILABLE",
-                            "Wearable API is not available: ${exception.message}",
-                            null
-                        )
-                    }
 
-            } else {
-                result.notImplemented()
-            }
+//                                if (call.method == "checkWearConnection") {
+//
+//
+//
+//                                }
+
+
+//                            Log.d(
+//                                "WearChannel",
+//                                "Connected nodes: ${nodes.map { it.isNearby }}"
+//                            )
+
+//                                nodes
+//                                    .filter { it.isNearby }
+//                                    .forEach { node ->
+//
+//                                        Log.d(
+//                                            "WearChannel",
+//                                            "Sending request to node: ${node.displayName}"
+//                                        )
+//                                        Wearable.getMessageClient(context)
+//                                            .sendMessage(
+//                                                node.id,
+//                                                "/requestWatchData",
+//                                                ByteArray(0)
+//                                            )
+//                                            .addOnSuccessListener {
+//                                                Log.d(
+//                                                    "WearChannel",
+//                                                    "Message sent successfully to ${node.displayName}"
+//                                                )
+//                                            }
+//                                            .addOnFailureListener { exception ->
+//                                                Log.e(
+//                                                    "WearChannel",
+//                                                    "Failed to send message to ${node.displayName}",
+//                                                    exception
+//                                                )
+//
+//                                            }
+
+//                                result.success(true)
+                }
+                .addOnFailureListener { exception ->
+                    result.error(
+                        "WEAR_API_UNAVAILABLE",
+                        "Wearable API is not available: ${exception.message}",
+                        null
+                    )
+                }
         }
+
+
+//            else if (call.method == "getHeartRate") {
+//                val healthServicesManager = HealthServicesManager(context)
+//                val heartRate = healthServicesManager.getHeartRate()
+//
+//                result.success(heartRate)
+//            }
+//
+//            else {
+//                result.notImplemented()
+//            }
     }
 
-    fun sendToFlutter(data: String) {
+
+    fun sendToFlutter(data: String, path: String) {
         Handler(Looper.getMainLooper()).post {
-            methodChannel.invokeMethod("watchData", data)
+            methodChannel.invokeMethod(path, data)
         }
     }
 }

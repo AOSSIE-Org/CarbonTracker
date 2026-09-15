@@ -22,8 +22,11 @@ class PhoneMessageService : WearableListenerService() {
             "MESSAGE RECEIVED: ${messageEvent.path} on node ${messageEvent.sourceNodeId}"
         )
 
-        if (messageEvent.path == "/watchData") {
-            WearChannel.sendToFlutter(String(messageEvent.data))
+        if(messageEvent.path == "/heartRateData") {
+            WearChannel.sendToFlutter(String(messageEvent.data), "heartRateData")
+        }
+        else if(messageEvent.path == "/exerciseData") {
+            WearChannel.sendToFlutter(String(messageEvent.data), "exerciseData")
         }
     }
 }
