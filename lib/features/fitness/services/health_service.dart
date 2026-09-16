@@ -108,6 +108,7 @@ class HealthService {
     try {
       List<HealthDataPoint> healthDataList =
           await HealthService.getHealthData();
+      DateTime? latestHeartRateTime;
 
       steps = await HealthService.getTodaySteps();
 
@@ -126,7 +127,11 @@ class HealthService {
           } else if (point.type == HealthDataType.FLIGHTS_CLIMBED) {
             floorsClimbed += value.numericValue.toInt();
           } else if (point.type == HealthDataType.HEART_RATE) {
-            heartRate = value.numericValue.toDouble();
+            if (latestHeartRateTime == null ||
+                point.dateTo.isAfter(latestHeartRateTime)) {
+              latestHeartRateTime = point.dateTo;
+              heartRate = value.numericValue.toDouble();
+            }
           } else if (point.type == HealthDataType.BLOOD_PRESSURE_SYSTOLIC) {
             // to be implemented
           }

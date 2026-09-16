@@ -201,6 +201,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
               child: RefreshIndicator(
                 onRefresh: _onRefresh,
                 child: SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 24,
