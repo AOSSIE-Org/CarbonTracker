@@ -7,6 +7,7 @@ import 'package:carbon_tracker/features/fitness/services/health_service.dart';
 import 'package:carbon_tracker/features/fitness/widgets/activity_card.dart';
 import 'package:carbon_tracker/features/fitness/widgets/stat_card.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
+import 'package:carbon_tracker/wearable/watch_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -21,14 +22,18 @@ class FitnessMetricsScreen extends ConsumerStatefulWidget {
 
 class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   List<StatCardData> _stats = [];
-  bool _isLoading = false;
   bool _isRefreshing = false;
   bool _permissionsGranted = false;
+  double heartRate = 0.0;
 
   @override
   void initState() {
     super.initState();
     getStats();
+  }
+
+  Future<void> isWatchConnected() async {
+    await WatchService.checkWatchConnection();
   }
 
   // Fetch health data and update the state
@@ -44,14 +49,13 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
           _isRefreshing = false;
         });
       }
-
       return;
     }
 
     List<StatCardData> data = [];
 
     setState(() {
-      _isLoading = true;
+      _isRefreshing = true;
     });
 
     try {
@@ -59,10 +63,12 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
         setState(() {
           _stats = [];
           _permissionsGranted = false;
+          _isRefreshing = false;
         });
         return;
       }
       data = await HealthService.generateData();
+      debugPrint('Generated stats: ${data.length}');
       if (!mounted) return;
       setState(() {
         _stats = data;
@@ -73,11 +79,14 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
     } finally {
       if (mounted) {
         setState(() {
-          _isLoading = false;
           _isRefreshing = false;
         });
       }
     }
+  }
+
+  Future<void> _onRefresh() async {
+    await getStats();
   }
 
   // To show the current date and a greeting to the user
@@ -117,17 +126,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
                     constraints: BoxConstraints(minWidth: 20, minHeight: 20),
                   )
                 : IconButton(
-                    onPressed: () async {
-                      setState(() {
-                        _isRefreshing = true;
-                      });
-
-                      Future.delayed(const Duration(seconds: 3), () {
-                        if (mounted) {
-                          getStats();
-                        }
-                      });
-                    },
+                    onPressed: _isRefreshing ? null : _onRefresh,
 
                     icon: const Icon(
                       Icons.refresh_rounded,
@@ -199,58 +198,62 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
               ),
             )
           : SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 24,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(user),
-                    const SizedBox(height: 24),
-                    _isLoading
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.primaryColor,
-                            ),
-                          )
-                        : _permissionsGranted
-                        ? _buildStatsGrid()
-                        : const Center(
-                            child: Text(
-                              'No fitness metrics available. Please ensure you have granted the necessary permissions and have health data available.',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: AppColors.subtitleText,
+              child: RefreshIndicator(
+                onRefresh: _onRefresh,
+                child: SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(user),
+                      const SizedBox(height: 24),
+                      _isRefreshing
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.secondaryColor,
+                              ),
+                            )
+                          : _permissionsGranted
+                          ? _buildStatsGrid()
+                          : const Center(
+                              child: Text(
+                                'No fitness metrics available. Please ensure you have granted the necessary permissions and have health data available.',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.subtitleText,
+                                ),
                               ),
                             ),
-                          ),
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    GestureDetector(
-                      onTap: () {
-                        showInfoModal(
-                          context,
-                          "Why Some Health Metrics Aren’t Available",
-                          metricsModalData,
-                          'Close',
-                        );
-                      },
-                      child: const Text(
-                        "Can't see some metrics?",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.secondaryColor,
-                          decoration: TextDecoration.underline,
+                      GestureDetector(
+                        onTap: () {
+                          showInfoModal(
+                            context,
+                            "Why Some Health Metrics Aren’t Available",
+                            metricsModalData,
+                            'Close',
+                          );
+                        },
+                        child: const Text(
+                          "Can't see some metrics?",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.secondaryColor,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 30),
+                      const SizedBox(height: 30),
 
-                    if (Platform.isAndroid) _buildRecentActivity(),
-                  ],
+                      if (Platform.isAndroid) _buildRecentActivity(),
+                    ],
+                  ),
                 ),
               ),
             ),

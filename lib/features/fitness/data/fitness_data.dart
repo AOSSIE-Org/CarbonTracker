@@ -25,7 +25,7 @@ class FitnessMetrics {
   final double distance;
   final double caloriesBurned;
   final int floorsClimbed;
-  final double heartRate;
+  final double? heartRate;
   final double bloodPressureSystolic;
   final double bloodPressureDiastolic;
 
@@ -78,8 +78,7 @@ class FitnessMetrics {
         iconColor: const Color(0xFFDC2626),
         iconBg: const Color(0xFFFEF2F2),
         label: 'Heart Rate',
-        value: heartRate != 0 ? heartRate.toStringAsFixed(0) : 'N/A',
-        // This data is available only when a watch is connected and heart rate monitoring is enabled
+        value: heartRate?.toInt().toString() ?? 'N/A',
         unit: 'bpm',
       ),
       StatCardData(
@@ -91,7 +90,6 @@ class FitnessMetrics {
             ? '$bloodPressureSystolic/$bloodPressureDiastolic'
             : 'N/A',
         unit: 'mmHg',
-        // This data is available only when a watch is connected and heart rate monitoring is enabled
       ),
     ];
   }
