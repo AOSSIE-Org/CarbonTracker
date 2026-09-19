@@ -1,15 +1,19 @@
 import 'dart:io';
 import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/core/widgets/modal.dart';
+import 'package:carbon_tracker/database/database_helper.dart';
+import 'package:carbon_tracker/database/models/activity.dart';
 import 'package:carbon_tracker/database/models/user.dart';
 import 'package:carbon_tracker/features/fitness/data/fitness_data.dart';
 import 'package:carbon_tracker/features/fitness/services/health_service.dart';
 import 'package:carbon_tracker/features/fitness/widgets/activity_card.dart';
 import 'package:carbon_tracker/features/fitness/widgets/stat_card.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
+import 'package:carbon_tracker/wearable/watch_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:sqflite/sqflite.dart';
 
 class FitnessMetricsScreen extends ConsumerStatefulWidget {
   const FitnessMetricsScreen({super.key});
@@ -21,62 +25,93 @@ class FitnessMetricsScreen extends ConsumerStatefulWidget {
 
 class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   List<StatCardData> _stats = [];
-  bool _isLoading = false;
   bool _isRefreshing = false;
   bool _permissionsGranted = false;
+  double heartRate = 0.0;
+  List<ActivityData> activities = [];
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
-    getStats();
+    _onRefresh();
+  }
+
+  Future<void> isWatchConnected() async {
+    await WatchService.checkWatchConnection();
   }
 
   // Fetch health data and update the state
 
   Future<void> getStats() async {
-    final user = ref.read(userProvider);
+    List<StatCardData> data = [];
+    data = await HealthService.generateData();
+    debugPrint('Generated stats: ${data.length}');
+    if (!mounted) return;
+    setState(() {
+      _stats = data;
+      _permissionsGranted = true;
+    });
+  }
 
-    if (user == null) {
-      if (mounted) {
+  Future<void> _onRefresh() async {
+    if (_isRefreshing) return;
+
+    try {
+      setState(() {
+        _isRefreshing = true;
+      });
+      final user = ref.read(userProvider);
+
+      if (user == null) {
         setState(() {
           _stats = [];
           _permissionsGranted = false;
           _isRefreshing = false;
         });
+
+        return;
       }
 
-      return;
-    }
-
-    List<StatCardData> data = [];
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
       if (!await HealthService.requestPermissions()) {
         setState(() {
           _stats = [];
           _permissionsGranted = false;
+          _isRefreshing = false;
         });
         return;
       }
-      data = await HealthService.generateData();
-      if (!mounted) return;
-      setState(() {
-        _stats = data;
-        _permissionsGranted = true;
-      });
+
+      await getStats();
+      await getExerciseData();
     } catch (e) {
-      debugPrint('Error fetching health data: $e');
+      debugPrint('Error during refresh: $e');
     } finally {
       if (mounted) {
         setState(() {
-          _isLoading = false;
           _isRefreshing = false;
         });
       }
+    }
+  }
+
+  Future<void> getExerciseData() async {
+    await WatchService.getExerciseData().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        debugPrint('Exercise Data request timed out — no response from watch');
+      },
+    );
+    List<ActivityData> activityData = await _dbHelper.queryAll(
+      'activity_data',
+      ActivityData.fromMap,
+    );
+    debugPrint('Fetched ${activityData.length} activities from the database');
+    if (mounted) {
+      debugPrint('Fetched ${activityData.length} activities from the database');
+      setState(() {
+        activities = activityData;
+      });
     }
   }
 
@@ -106,37 +141,22 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
             ),
           ],
         ),
-        SizedBox(
-          width: 48,
-          height: 48,
-          child: Center(
-            child: _isRefreshing
-                ? const CircularProgressIndicator(
-                    color: AppColors.textDark,
-                    strokeWidth: 2,
-                    constraints: BoxConstraints(minWidth: 20, minHeight: 20),
-                  )
-                : IconButton(
-                    onPressed: () async {
-                      setState(() {
-                        _isRefreshing = true;
-                      });
 
-                      Future.delayed(const Duration(seconds: 3), () {
-                        if (mounted) {
-                          getStats();
-                        }
-                      });
-                    },
-
-                    icon: const Icon(
-                      Icons.refresh_rounded,
-                      color: AppColors.textDark,
-                      size: 30,
-                    ),
-                  ),
+        if (!_isRefreshing)
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(
+              child: IconButton(
+                onPressed: _onRefresh,
+                icon: const Icon(
+                  Icons.refresh_rounded,
+                  color: AppColors.textDark,
+                  size: 30,
+                ),
+              ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -200,6 +220,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
             )
           : SafeArea(
               child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 24,
@@ -209,10 +230,10 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
                   children: [
                     _buildHeader(user),
                     const SizedBox(height: 24),
-                    _isLoading
+                    _isRefreshing
                         ? const Center(
                             child: CircularProgressIndicator(
-                              color: AppColors.primaryColor,
+                              color: AppColors.secondaryColor,
                             ),
                           )
                         : _permissionsGranted

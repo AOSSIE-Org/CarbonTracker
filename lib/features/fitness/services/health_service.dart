@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:carbon_tracker/features/fitness/data/fitness_data.dart';
+import 'package:carbon_tracker/wearable/watch_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 
@@ -98,7 +99,7 @@ class HealthService {
   static Future<List<StatCardData>> generateData() async {
     double distanceSum = 0.0;
     double caloriesSum = 0.0;
-    double heartRate = 0.0;
+    double? heartRate;
     double bloodPressureSystolic = 0.0;
     double bloodPressureDiastolic = 0.0;
     int floorsClimbed = 0;
@@ -107,14 +108,14 @@ class HealthService {
     try {
       List<HealthDataPoint> healthDataList =
           await HealthService.getHealthData();
+      DateTime? latestHeartRateTime;
 
       steps = await HealthService.getTodaySteps();
 
       for (final point in healthDataList) {
         HealthValue value = point.value;
 
-        debugPrint(
-            'Health Data Point: ${point.type}');
+        debugPrint('Health Data Point: ${point.type}');
 
         if (value is NumericHealthValue) {
           if (point.type == HealthDataType.DISTANCE_WALKING_RUNNING ||
@@ -126,7 +127,11 @@ class HealthService {
           } else if (point.type == HealthDataType.FLIGHTS_CLIMBED) {
             floorsClimbed += value.numericValue.toInt();
           } else if (point.type == HealthDataType.HEART_RATE) {
-            // to be implemented based on watch connection
+            if (latestHeartRateTime == null ||
+                point.dateTo.isAfter(latestHeartRateTime)) {
+              latestHeartRateTime = point.dateTo;
+              heartRate = value.numericValue.toDouble();
+            }
           } else if (point.type == HealthDataType.BLOOD_PRESSURE_SYSTOLIC) {
             // to be implemented
           }
@@ -135,6 +140,7 @@ class HealthService {
           }
         }
       }
+      heartRate ??= await WatchService.getHeartRate();
     } catch (e) {
       debugPrint('Failed to fetch health data : $e');
     }
