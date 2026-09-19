@@ -9,7 +9,7 @@ import 'dart:io';
 
 class ExportDataService {
   static Future<String> convertDataToJson() async {
-    final List<Trip> trips = await DatabaseHelper().queryAllTrips();
+    final List<Trip> trips = await DatabaseHelper().queryAll('trips', Trip.fromMap);
 
     // Convert the list of trips to JSON
     final String jsonData = jsonEncode(
