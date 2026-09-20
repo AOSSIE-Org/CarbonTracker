@@ -23,7 +23,6 @@ class WatchService {
 
     if (call.method == 'heartRateData') {
       final double? data = double.tryParse(call.arguments.toString());
-      debugPrint("Received Heart Rate Data : $data");
 
       if (_heartRateCompleter != null && !_heartRateCompleter!.isCompleted) {
         _heartRateCompleter!.complete(data);
@@ -34,7 +33,6 @@ class WatchService {
         try {
           DatabaseHelper dbHelper = DatabaseHelper();
           final String data = call.arguments;
-          debugPrint("Received Exercise Data : $data");
           final List<dynamic> decoded = jsonDecode(data);
           final List<ActivityData> exercises = decoded
               .map((item) => ActivityData.fromMap(item as Map<String, dynamic>))
@@ -55,15 +53,10 @@ class WatchService {
             }
           }
 
-          debugPrint("Exercise Data saved to database successfully.");
-
-          debugPrint("BEFORE COMPLETE");
-
           _exerciseDataCompleter!.complete();
-
-          debugPrint("AFTER COMPLETE");
-        } catch (e) {
+        } catch (e, stackTrace) {
           debugPrint('Failed to decode exercise data: $e');
+          _exerciseDataCompleter!.completeError(e, stackTrace);
         }
       }
     }
@@ -102,23 +95,9 @@ class WatchService {
 
   static Future<void> getExerciseData() async {
     _exerciseDataCompleter = Completer<void>();
-    try {
-      await _platform.invokeMethod('getExerciseData');
 
-      await _exerciseDataCompleter!.future.timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          debugPrint(
-            'Exercise Data request timed out — no response from watch',
-          );
-        },
-      );
-      debugPrint("WATCH SERVICE: AFTER AWAIT");
-    } on PlatformException catch (e) {
-      debugPrint('Failed to get Exercise Data: ${e.message}');
-    } on MissingPluginException catch (e) {
-      debugPrint('Missing Plugin Exception: ${e.message}');
-    }
-    debugPrint("WATCH SERVICE: END");
+    await _platform.invokeMethod('getExerciseData');
+
+    await _exerciseDataCompleter!.future.timeout(const Duration(seconds: 5));
   }
 }

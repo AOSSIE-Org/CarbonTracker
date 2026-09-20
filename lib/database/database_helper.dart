@@ -69,7 +69,7 @@ class DatabaseHelper {
           if (oldVersion < 2) {
             await db.execute('''
               CREATE TABLE activity_data (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              id INTEGER PRIMARY KEY,
               activityType TEXT NOT NULL,
               startTime INTEGER NOT NULL,
               heartRate REAL,
@@ -210,7 +210,6 @@ class DatabaseHelper {
         try {
           results.add(fromMap(item));
         } catch (e) {
-          debugPrint('Failed to parse row: $item');
           debugPrint('Error: $e');
           rethrow;
         }

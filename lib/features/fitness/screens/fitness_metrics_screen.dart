@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/core/widgets/modal.dart';
@@ -11,6 +12,7 @@ import 'package:carbon_tracker/features/fitness/widgets/stat_card.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
 import 'package:carbon_tracker/wearable/watch_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
@@ -74,6 +76,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
       }
 
       if (!await HealthService.requestPermissions()) {
+        if (!mounted) return;
         setState(() {
           _stats = [];
           _permissionsGranted = false;
@@ -96,22 +99,33 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   }
 
   Future<void> getExerciseData() async {
-    await WatchService.getExerciseData().timeout(
-      const Duration(seconds: 5),
-      onTimeout: () {
-        debugPrint('Exercise Data request timed out — no response from watch');
-      },
-    );
-    List<ActivityData> activityData = await _dbHelper.queryAll(
-      'activity_data',
-      ActivityData.fromMap,
-    );
-    debugPrint('Fetched ${activityData.length} activities from the database');
-    if (mounted) {
-      debugPrint('Fetched ${activityData.length} activities from the database');
-      setState(() {
-        activities = activityData;
-      });
+    try {
+      await WatchService.getExerciseData();
+      List<ActivityData> activityData = await _dbHelper.queryAll(
+        'activity_data',
+        ActivityData.fromMap,
+      );
+      activityData.sort((a, b) => b.startTime.compareTo(a.startTime));
+      if (mounted) {
+        debugPrint(
+          'Fetched ${activityData.length} activities from the database',
+        );
+        setState(() {
+          activities = activityData;
+        });
+      }
+    } on TimeoutException catch (e) {
+      debugPrint('Timeout while fetching exercise data: $e');
+    } on PlatformException catch (e) {
+      debugPrint(
+        'PlatformException while fetching exercise data: ${e.message}',
+      );
+    } on MissingPluginException catch (e) {
+      debugPrint(
+        'MissingPluginException while fetching exercise data: ${e.message}',
+      );
+    } catch (e) {
+      debugPrint('Error while fetching exercise data: $e');
     }
   }
 
