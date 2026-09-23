@@ -12,7 +12,7 @@ class SummaryNotifier extends Notifier<Summary?> {
   @override
   Summary? build() {
     final trips = ref.watch(tripProvider);
-    if(trips.isEmpty) {
+    if (trips.isEmpty) {
       return null;
     }
     return _calculateSummary(trips);
@@ -29,9 +29,7 @@ class SummaryNotifier extends Notifier<Summary?> {
   Summary _calculateSummary(List<Trip> trips) {
     // 1. Calculate weekly totals
 
-    double totalCarbonEmitted = 0.0;
     double totalCarbonSaved = 0.0;
-    double todayCarbonEmitted = 0.0;
     Map<String, WeeklyData> weeklyData = {};
 
     DateTime now = DateTime.now();
@@ -51,20 +49,11 @@ class SummaryNotifier extends Notifier<Summary?> {
       }
 
       final dayOfWeek = WeekdayConstants.days[trip.date.weekday - 1];
-      final emittedKg = trip.carbonEmitted / 1000;
       final savedKg = trip.carbonSaved / 1000;
 
-      if (trip.date.year == now.year &&
-          trip.date.month == now.month &&
-          trip.date.day == now.day) {
-        todayCarbonEmitted += emittedKg;
-      }
-
-      totalCarbonEmitted += emittedKg;
       totalCarbonSaved += savedKg;
 
       weeklyData[dayOfWeek] = WeeklyData(
-        carbonEmitted: (weeklyData[dayOfWeek]?.carbonEmitted ?? 0) + emittedKg,
         carbonSaved: (weeklyData[dayOfWeek]?.carbonSaved ?? 0) + savedKg,
       );
     }
@@ -72,9 +61,7 @@ class SummaryNotifier extends Notifier<Summary?> {
     // 2. Create a Summary object
 
     Summary summary = Summary(
-      totalCarbonEmitted: totalCarbonEmitted,
       totalCarbonSaved: totalCarbonSaved,
-      todayCarbonEmitted: todayCarbonEmitted,
       summaryData: weeklyData,
     );
 

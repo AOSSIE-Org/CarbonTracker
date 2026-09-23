@@ -1,6 +1,7 @@
 import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/core/data/tracking_options.dart';
 import 'package:carbon_tracker/core/data/transport_preferences.dart';
+import 'package:carbon_tracker/core/enums/comparison_modes.dart';
 import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/core/widgets/modal.dart';
 import 'package:carbon_tracker/database/models/user.dart';
@@ -28,6 +29,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       TextEditingController();
   bool _controllerInitialized = false;
   bool _myDataExpanded = false;
+  ComparisonTransportMode? _comparisonTransportMode;
 
   Future<void> saveData() async {
     final user = ref.read(userProvider);
@@ -61,11 +63,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> onTrackingSelection(TrackingOption type) async {
     {
+      final user = ref.read(userProvider);
+      if (user != null) {
+        await ref
+            .read(userProvider.notifier)
+            .updateUser(
+              ref.read(userProvider)!.copyWith(trackingMode: type.name),
+            );
+      }
+    }
+  }
+
+  Future<void> updateComparisonMode(ComparisonTransportMode mode) async {
+    final user = ref.read(userProvider);
+    if (user != null) {
       await ref
           .read(userProvider.notifier)
-          .updateUser(
-            ref.read(userProvider)!.copyWith(trackingMode: type.name),
-          );
+          .updateUser(user.copyWith(comparisonMode: mode));
+      setState(() => _comparisonTransportMode = mode);
     }
   }
 
@@ -83,6 +98,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _weightController.text = user.weight.toString();
       _sustainabilityController.text = user.sustainabilityThoughts ?? '';
       _controllerInitialized = true;
+      _comparisonTransportMode = user.comparisonMode;
     }
     return Scaffold(
       body: SafeArea(
@@ -106,6 +122,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   _weightController,
                   _sustainabilityController,
                 ),
+                const SizedBox(height: 24),
+                _buildComparisonModeCard(),
                 const SizedBox(height: 16),
                 _buildMyDataCard(),
                 const SizedBox(height: 24),
@@ -436,6 +454,57 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComparisonModeCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.metricsBackgroundColor,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            icon: Icons.compare_arrows,
+            title: 'Comparison Transport Mode',
+            iconColor: AppColors.greenIcon,
+            bgColor: AppColors.greenIconBg,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              TrackingOptionTile(
+                selected:
+                    _comparisonTransportMode == ComparisonTransportMode.car,
+                icon: Icons.directions_car,
+                label: 'Car',
+                onTap: () => updateComparisonMode(ComparisonTransportMode.car),
+              ),
+              const SizedBox(width: 10),
+              TrackingOptionTile(
+                selected:
+                    _comparisonTransportMode == ComparisonTransportMode.bus,
+                icon: Icons.directions_bus,
+                label: 'Bus',
+                onTap: () => updateComparisonMode(ComparisonTransportMode.bus),
+              ),
+              const SizedBox(width: 10),
+              TrackingOptionTile(
+                selected:
+                    _comparisonTransportMode ==
+                    ComparisonTransportMode.electricCar,
+                icon: Icons.electric_car,
+                label: 'Electric Car',
+                onTap: () =>
+                    updateComparisonMode(ComparisonTransportMode.electricCar),
+              ),
+            ],
           ),
         ],
       ),

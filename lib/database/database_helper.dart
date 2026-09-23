@@ -1,4 +1,3 @@
-import 'package:carbon_tracker/database/models/activity.dart';
 import 'package:carbon_tracker/features/carbon/data/demo_data.dart';
 import 'package:carbon_tracker/features/carbon/helpers/carbon_calculator.dart';
 import 'package:flutter/foundation.dart';
@@ -36,6 +35,7 @@ class DatabaseHelper {
             preferred_transports TEXT NOT NULL,
             frequent_transports TEXT NOT NULL,
             tracking_mode TEXT NOT NULL,
+            comparison_mode TEXT NOT NULL,
             weight REAL NOT NULL,
             sustainability_thoughts TEXT,
             last_reset_month INTEGER NOT NULL,
@@ -48,7 +48,6 @@ class DatabaseHelper {
             date INTEGER NOT NULL,
             distance REAL NOT NULL,
             transport_mode TEXT NOT NULL,
-            carbon_emitted REAL NOT NULL,
             carbon_saved REAL NOT NULL
           )
         ''');
@@ -79,6 +78,31 @@ class DatabaseHelper {
             )
       ''');
           }
+
+          await db.execute('''
+            CREATE TABLE trips (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date INTEGER NOT NULL,
+            distance REAL NOT NULL,
+            transport_mode TEXT NOT NULL,
+            carbon_saved REAL NOT NULL
+          )
+        ''');
+
+          await db.execute('''
+            CREATE TABLE user (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            name TEXT NOT NULL,
+            preferred_transports TEXT NOT NULL,
+            frequent_transports TEXT NOT NULL,
+            tracking_mode TEXT NOT NULL,
+            comparison_mode TEXT NOT NULL,
+            weight REAL NOT NULL,
+            sustainability_thoughts TEXT,
+            last_reset_month INTEGER NOT NULL,
+            last_reset_year INTEGER NOT NULL
+          )
+        ''');
         },
       );
 
@@ -196,10 +220,8 @@ class DatabaseHelper {
 
   // Query all trips for a specific user (not filtering by user since we have a single-user design)
 
-  Future<List<T>> queryAll<T>(
-    String table,
-    T Function(Map<String, dynamic>) fromMap,
-  ) async {
+  Future<List<T>> queryAll<T>(String table,
+      T Function(Map<String, dynamic>) fromMap,) async {
     try {
       final Database db = await getDB();
       List<Map<String, dynamic>> data = await db.query(table);
@@ -297,8 +319,12 @@ class DatabaseHelper {
       'tracking_mode': 'refresh',
       'weight': 70.0,
       'sustainability_thoughts': "I want to reduce my carbon footprint!",
-      'last_reset_month': DateTime.now().month,
-      'last_reset_year': DateTime.now().year,
+      'last_reset_month': DateTime
+          .now()
+          .month,
+      'last_reset_year': DateTime
+          .now()
+          .year,
     };
 
     try {
@@ -327,11 +353,7 @@ class DatabaseHelper {
             'date': trip['date'],
             'distance': trip['distance'],
             'transport_mode': trip['transport_mode'],
-            'carbon_emitted': CarbonCalculator.emission(
-              trip['transport_mode'],
-              trip['distance'],
-            ),
-            'carbon_saved': CarbonCalculator.savings(
+            'carbon_saved': CarbonCalculator.emissionSaved(
               trip['transport_mode'],
               trip['distance'],
             ),

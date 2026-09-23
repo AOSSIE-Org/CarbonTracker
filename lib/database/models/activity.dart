@@ -1,5 +1,4 @@
 import 'package:carbon_tracker/database/models/base_model.dart';
-import 'package:flutter/cupertino.dart';
 
 class ActivityData extends BaseModel {
   final String activityType;
