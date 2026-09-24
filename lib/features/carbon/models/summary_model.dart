@@ -1,20 +1,17 @@
 class WeeklyData {
-  final double carbonEmitted;
   final double carbonSaved;
 
-  const WeeklyData({this.carbonEmitted = 0, this.carbonSaved = 0});
+  const WeeklyData({this.carbonSaved = 0});
 }
 
 class Summary {
-  final double totalCarbonEmitted;
   final double totalCarbonSaved;
-  final double todayCarbonEmitted;
+  final double totalCarbonSavedToday;
   final Map<String, WeeklyData> summaryData;
 
   Summary({
-    required this.totalCarbonEmitted,
     required this.totalCarbonSaved,
-    required this.todayCarbonEmitted,
     required this.summaryData,
+    required this.totalCarbonSavedToday,
   });
 }

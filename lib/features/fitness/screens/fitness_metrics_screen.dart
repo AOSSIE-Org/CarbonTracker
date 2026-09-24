@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/core/widgets/modal.dart';
+import 'package:carbon_tracker/database/database_helper.dart';
+import 'package:carbon_tracker/database/models/activity.dart';
 import 'package:carbon_tracker/database/models/user.dart';
 import 'package:carbon_tracker/features/fitness/data/fitness_data.dart';
 import 'package:carbon_tracker/features/fitness/services/health_service.dart';
@@ -9,6 +12,7 @@ import 'package:carbon_tracker/features/fitness/widgets/stat_card.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
 import 'package:carbon_tracker/wearable/watch_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -25,11 +29,13 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   bool _isRefreshing = false;
   bool _permissionsGranted = false;
   double heartRate = 0.0;
+  List<ActivityData> activities = [];
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
-    getStats();
+    _onRefresh();
   }
 
   Future<void> isWatchConnected() async {
@@ -39,27 +45,37 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   // Fetch health data and update the state
 
   Future<void> getStats() async {
-    final user = ref.read(userProvider);
+    List<StatCardData> data = [];
+    data = await HealthService.generateData();
+    debugPrint('Generated stats: ${data.length}');
+    if (!mounted) return;
+    setState(() {
+      _stats = data;
+      _permissionsGranted = true;
+    });
+  }
 
-    if (user == null) {
-      if (mounted) {
+  Future<void> _onRefresh() async {
+    if (_isRefreshing) return;
+
+    try {
+      setState(() {
+        _isRefreshing = true;
+      });
+      final user = ref.read(userProvider);
+
+      if (user == null) {
         setState(() {
           _stats = [];
           _permissionsGranted = false;
           _isRefreshing = false;
         });
+
+        return;
       }
-      return;
-    }
 
-    List<StatCardData> data = [];
-
-    setState(() {
-      _isRefreshing = true;
-    });
-
-    try {
       if (!await HealthService.requestPermissions()) {
+        if (!mounted) return;
         setState(() {
           _stats = [];
           _permissionsGranted = false;
@@ -67,15 +83,13 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
         });
         return;
       }
-      data = await HealthService.generateData();
-      debugPrint('Generated stats: ${data.length}');
-      if (!mounted) return;
-      setState(() {
-        _stats = data;
-        _permissionsGranted = true;
-      });
+
+      await Future.wait([
+        getStats(),
+        if (Platform.isAndroid) getExerciseData(),
+      ]);
     } catch (e) {
-      debugPrint('Error fetching health data: $e');
+      debugPrint('Error during refresh: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -85,8 +99,33 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
     }
   }
 
-  Future<void> _onRefresh() async {
-    await getStats();
+  Future<void> getExerciseData() async {
+    try {
+      await WatchService.getExerciseData();
+    } on TimeoutException catch (e) {
+      debugPrint('Timeout while fetching exercise data: $e');
+    } on PlatformException catch (e) {
+      debugPrint(
+        'PlatformException while fetching exercise data: ${e.message}',
+      );
+    } on MissingPluginException catch (e) {
+      debugPrint(
+        'MissingPluginException while fetching exercise data: ${e.message}',
+      );
+    } catch (e) {
+      debugPrint('Error while fetching exercise data: $e');
+    }
+    try {
+      final activityData = await _dbHelper.queryAll(
+        'activity_data',
+        ActivityData.fromMap,
+      );
+      activityData.sort((a, b) => b.startTime.compareTo(a.startTime));
+      if (!mounted) return;
+      setState(() => activities = activityData);
+    } catch (e) {
+      debugPrint('Error while loading stored activities: $e');
+    }
   }
 
   // To show the current date and a greeting to the user
@@ -115,27 +154,22 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
             ),
           ],
         ),
-        SizedBox(
-          width: 48,
-          height: 48,
-          child: Center(
-            child: _isRefreshing
-                ? const CircularProgressIndicator(
-                    color: AppColors.textDark,
-                    strokeWidth: 2,
-                    constraints: BoxConstraints(minWidth: 20, minHeight: 20),
-                  )
-                : IconButton(
-                    onPressed: _isRefreshing ? null : _onRefresh,
 
-                    icon: const Icon(
-                      Icons.refresh_rounded,
-                      color: AppColors.textDark,
-                      size: 30,
-                    ),
-                  ),
+        if (!_isRefreshing)
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(
+              child: IconButton(
+                onPressed: _onRefresh,
+                icon: const Icon(
+                  Icons.refresh_rounded,
+                  color: AppColors.textDark,
+                  size: 30,
+                ),
+              ),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -198,62 +232,59 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
               ),
             )
           : SafeArea(
-              child: RefreshIndicator(
-                onRefresh: _onRefresh,
-                child: SingleChildScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 24,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(user),
-                      const SizedBox(height: 24),
-                      _isRefreshing
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.secondaryColor,
-                              ),
-                            )
-                          : _permissionsGranted
-                          ? _buildStatsGrid()
-                          : const Center(
-                              child: Text(
-                                'No fitness metrics available. Please ensure you have granted the necessary permissions and have health data available.',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: AppColors.subtitleText,
-                                ),
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(user),
+                    const SizedBox(height: 24),
+                    _isRefreshing
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.secondaryColor,
+                            ),
+                          )
+                        : _permissionsGranted
+                        ? _buildStatsGrid()
+                        : const Center(
+                            child: Text(
+                              'No fitness metrics available. Please ensure you have granted the necessary permissions and have health data available.',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppColors.subtitleText,
                               ),
                             ),
-                      const SizedBox(height: 20),
-
-                      GestureDetector(
-                        onTap: () {
-                          showInfoModal(
-                            context,
-                            "Why Some Health Metrics Aren’t Available",
-                            metricsModalData,
-                            'Close',
-                          );
-                        },
-                        child: const Text(
-                          "Can't see some metrics?",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.secondaryColor,
-                            decoration: TextDecoration.underline,
                           ),
+                    const SizedBox(height: 20),
+
+                    GestureDetector(
+                      onTap: () {
+                        showInfoModal(
+                          context,
+                          "Why Some Health Metrics Aren’t Available",
+                          metricsModalData,
+                          'Close',
+                        );
+                      },
+                      child: const Text(
+                        "Can't see some metrics?",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.secondaryColor,
+                          decoration: TextDecoration.underline,
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
-                      if (Platform.isAndroid) _buildRecentActivity(),
-                    ],
-                  ),
+                    if (Platform.isAndroid) _buildRecentActivity(),
+                  ],
                 ),
               ),
             ),
