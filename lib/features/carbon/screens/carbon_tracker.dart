@@ -109,7 +109,7 @@ class _CarbonSavedTodayCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              ref.watch(summaryProvider)?.totalCarbonSaved.toStringAsFixed(2) ??
+              ref.watch(summaryProvider)?.totalCarbonSavedToday.toStringAsFixed(2) ??
                   '0.00',
               style: const TextStyle(
                 fontSize: 64,

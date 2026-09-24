@@ -28,8 +28,11 @@ class WatchService {
         _heartRateCompleter!.complete(data);
       }
     } else if (call.method == 'exerciseData') {
-      if (_exerciseDataCompleter != null &&
-          !_exerciseDataCompleter!.isCompleted) {
+      final completer = _exerciseDataCompleter;
+
+      if (completer != null && !completer.isCompleted) {
+        _exerciseDataCompleter = null;
+
         try {
           DatabaseHelper dbHelper = DatabaseHelper();
           final String data = call.arguments;
@@ -38,25 +41,15 @@ class WatchService {
               .map((item) => ActivityData.fromMap(item as Map<String, dynamic>))
               .toList();
 
-          final List<ActivityData> existingExercises = await dbHelper.queryAll(
+          await dbHelper.upsertAll(
             'activity_data',
-            ActivityData.fromMap,
+            exercises.where((e) => e.id != null).toList(),
           );
 
-          final ids = existingExercises.map((e) => e.id).toList();
-
-          for (ActivityData exercise in exercises) {
-            if (!ids.contains(exercise.id)) {
-              await dbHelper.insert('activity_data', exercise);
-            } else {
-              await dbHelper.updateData('activity_data', exercise);
-            }
-          }
-
-          _exerciseDataCompleter!.complete();
+          if (!completer.isCompleted) completer.complete();
         } catch (e, stackTrace) {
           debugPrint('Failed to decode exercise data: $e');
-          _exerciseDataCompleter!.completeError(e, stackTrace);
+          if (!completer.isCompleted) completer.completeError(e, stackTrace);
         }
       }
     }
@@ -96,8 +89,10 @@ class WatchService {
   static Future<void> getExerciseData() async {
     _exerciseDataCompleter = Completer<void>();
 
+    final completer = _exerciseDataCompleter;
+
     await _platform.invokeMethod('getExerciseData');
 
-    await _exerciseDataCompleter!.future.timeout(const Duration(seconds: 5));
+    await completer!.future.timeout(const Duration(seconds: 5));
   }
 }

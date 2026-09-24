@@ -29,6 +29,8 @@ class _MapUIState extends State<MapUI> {
     ),
   );
 
+  String? _routeError;
+
   Future<void> drawRoad() async {
     final start = GeoPoint(
       latitude: widget.currentLat,
@@ -40,21 +42,43 @@ class _MapUIState extends State<MapUI> {
       longitude: widget.destinationLon,
     );
 
-    await _mapController.drawRoad(
-      start,
-      destination,
-      roadType: widget.type,
-      roadOption: const RoadOption(
-        roadColor: Colors.blue,
-        roadWidth: 8,
-        zoomInto: true,
-        roadBorderColor: Colors.black,
-      ),
-    );
+    try {
+      await _mapController.drawRoad(
+        start,
+        destination,
+        roadType: widget.type,
+        roadOption: const RoadOption(
+          roadColor: Colors.blue,
+          roadWidth: 8,
+          zoomInto: true,
+          roadBorderColor: Colors.black,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error drawing road: $e');
+      setState(() {
+        _routeError = 'Failed to draw route';
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _mapController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_routeError != null) {
+      return Center(
+        child: Text(
+          _routeError!,
+          style: const TextStyle(color: Colors.red, fontSize: 16),
+        ),
+      );
+    }
+
     return OSMFlutter(
       controller: _mapController,
       onMapIsReady: (bool isReady) {

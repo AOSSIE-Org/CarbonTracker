@@ -6,7 +6,12 @@ class WeeklyData {
 
 class Summary {
   final double totalCarbonSaved;
+  final double totalCarbonSavedToday;
   final Map<String, WeeklyData> summaryData;
 
-  Summary({required this.totalCarbonSaved, required this.summaryData});
+  Summary({
+    required this.totalCarbonSaved,
+    required this.summaryData,
+    required this.totalCarbonSavedToday,
+  });
 }

@@ -1,6 +1,7 @@
 import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/database/models/trips.dart';
 import 'package:carbon_tracker/features/carbon/constants/weekday_constants.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:carbon_tracker/features/carbon/models/summary_model.dart';
 
@@ -29,6 +30,7 @@ class SummaryNotifier extends Notifier<Summary?> {
   Summary _calculateSummary(List<Trip> trips) {
     // 1. Calculate weekly totals
 
+    double totalCarbonSavedToday = 0.0;
     double totalCarbonSaved = 0.0;
     Map<String, WeeklyData> weeklyData = {};
 
@@ -51,6 +53,8 @@ class SummaryNotifier extends Notifier<Summary?> {
       final dayOfWeek = WeekdayConstants.days[trip.date.weekday - 1];
       final savedKg = trip.carbonSaved / 1000;
 
+      if (DateUtils.isSameDay(trip.date, now)) totalCarbonSavedToday += savedKg;
+
       totalCarbonSaved += savedKg;
 
       weeklyData[dayOfWeek] = WeeklyData(
@@ -62,6 +66,7 @@ class SummaryNotifier extends Notifier<Summary?> {
 
     Summary summary = Summary(
       totalCarbonSaved: totalCarbonSaved,
+      totalCarbonSavedToday: totalCarbonSavedToday,
       summaryData: weeklyData,
     );
 

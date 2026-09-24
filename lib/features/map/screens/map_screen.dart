@@ -71,7 +71,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         setState(() {
           _errMessage =
               res['message'] ??
-                  "Something went wrong while checking location permissions.";
+              "Something went wrong while checking location permissions.";
         });
         return;
       }
@@ -190,6 +190,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         ),
       );
 
+      if (!mounted) return;
+
       final t = await ref.read(tripProvider.notifier).loadTrips();
       debugPrint("trips loaded ${t.length}");
 
@@ -198,6 +200,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       setState(() {
         _currentTripId = id;
         _startMapRoute = true;
+      });
+    } catch (e) {
+      debugPrint("Error starting trip: $e");
+      if (!mounted) return;
+      setState(() {
+        _errMessage = "Error starting trip: $e";
       });
     } finally {
       if (mounted) {
@@ -210,13 +218,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery
-        .of(context)
-        .size;
-    final topPadding = MediaQuery
-        .of(context)
-        .padding
-        .top;
+    final size = MediaQuery.of(context).size;
+    final topPadding = MediaQuery.of(context).padding.top;
     final user = ref.watch(userProvider);
 
     if (user == null) {
@@ -229,227 +232,230 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       body: _errMessage.isNotEmpty
           ? Center(child: Text(_errMessage))
           : AnimatedSize(
-        duration: const Duration(milliseconds: 300),
-        child: GestureDetector(
-          onTap: () {
-            FocusScope.of(context).unfocus();
-          },
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child:
-                _startMapRoute &&
-                    _currentLocationQuery != null &&
-                    _destinationLocationQuery != null
-                    ? MapUI(
-                  currentLat: _currentLocationQuery!.lat!,
-                  currentLon: _currentLocationQuery!.lon!,
-                  destinationLat: _destinationLocationQuery!.lat!,
-                  destinationLon: _destinationLocationQuery!.lon!,
-                  type: getRoadType(_selectedMode!),
-                )
-                    : Opacity(
-                  opacity: 0.7,
-                  child: Image.asset(
-                    'assets/images/map_placeholder.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-
-              if (_startMapRoute)
-                Positioned(
-                  top: topPadding + size.height * 0.02,
-                  left: 16,
-                  right: 16,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color: AppColors.secondaryColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.directions,
-                            color: AppColors.primaryColor,
-                            size: 30,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            showMapModal(
-                              context,
-                              "Trip Information",
-                              _totalDistanceKm!,
-                              _currentLocationQuery!.locationString!,
-                              _destinationLocationQuery!.locationString!,
-                                  () async {
-                                await _tripRepository.cancelTrip(
-                                  _currentTripId!,
-                                );
-                                await ref
-                                    .read(tripProvider.notifier)
-                                    .loadTrips();
-                                resetState();
-                              },
-                                  () {
-                                resetState();
-                              },
-                            );
-                          },
-                          child: Container(
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: AppColors.secondaryColor,
-                              borderRadius: BorderRadius.circular(8),
+              duration: const Duration(milliseconds: 300),
+              child: GestureDetector(
+                onTap: () {
+                  FocusScope.of(context).unfocus();
+                },
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child:
+                          _startMapRoute &&
+                              _currentLocationQuery != null &&
+                              _destinationLocationQuery != null
+                          ? MapUI(
+                              currentLat: _currentLocationQuery!.lat!,
+                              currentLon: _currentLocationQuery!.lon!,
+                              destinationLat: _destinationLocationQuery!.lat!,
+                              destinationLon: _destinationLocationQuery!.lon!,
+                              type: getRoadType(_selectedMode!),
+                            )
+                          : Opacity(
+                              opacity: 0.7,
+                              child: Image.asset(
+                                'assets/images/map_placeholder.png',
+                                fit: BoxFit.cover,
+                              ),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10.0,
+                    ),
+
+                    if (_startMapRoute)
+                      Positioned(
+                        top: topPadding + size.height * 0.02,
+                        left: 16,
+                        right: 16,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: AppColors.secondaryColor,
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
-                                child: Text(
-                                  "Calculating route for ${_destinationLocationQuery!
-                                      .locationString}",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: AppColors.primaryColor,
-                                    overflow: TextOverflow.ellipsis,
-                                    fontWeight: FontWeight.w600,
+                                child: Icon(
+                                  Icons.directions,
+                                  color: AppColors.primaryColor,
+                                  size: 30,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(width: 16),
+
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  showMapModal(
+                                    context,
+                                    "Trip Information",
+                                    _totalDistanceKm!,
+                                    _currentLocationQuery!.locationString!,
+                                    _destinationLocationQuery!.locationString!,
+                                    () async {
+                                      await _tripRepository.cancelTrip(
+                                        _currentTripId!,
+                                      );
+                                      await ref
+                                          .read(tripProvider.notifier)
+                                          .loadTrips();
+                                      resetState();
+                                    },
+                                    () {
+                                      resetState();
+                                    },
+                                  );
+                                },
+                                child: Container(
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secondaryColor,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10.0,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "Calculating route for ${_destinationLocationQuery!.locationString}",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: AppColors.primaryColor,
+                                          overflow: TextOverflow.ellipsis,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                ...[
-                  Positioned(
-                    top: topPadding + size.height * 0.01,
-                    left: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryColor,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          LocationCard(
-                            currentLocation: _currentLocationQuery,
-                            onCurrentSelection: (SearchResult value) {
-                              setState(() {
-                                _currentLocations = [];
-                                _currentLocationSelected = true;
-                                _currentLocationQuery = value;
-                              });
-                            },
-                            currentLocations: _currentLocations,
-                            destinationLocations: _destinationLocations,
-                            onDestinationSelection: (SearchResult value) {
-                              setState(() {
-                                _destinationLocations = [];
-                                _destinationLocationSelected = true;
-                                _destinationLocationQuery = value;
-                              });
-                            },
-
-                            onCurrentChanged: (String value) {
-                              setState(() {
-                                _currentLocationString = value;
-                              });
-                            },
-                            onDestinationChanged: (String value) {
-                              setState(() {
-                                _destinationLocationString = value;
-                              });
-                            },
-                          ),
-                          if (_currentLocationSelected &&
-                              _destinationLocationSelected) ...[
-                            SizedBox(height: 10),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
+                      )
+                    else ...[
+                      Positioned(
+                        top: topPadding + size.height * 0.01,
+                        left: 16,
+                        right: 16,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryColor,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.25),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
                               ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(30),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(
-                                      alpha: 0.08,
-                                    ),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              LocationCard(
+                                currentLocation: _currentLocationQuery,
+                                onCurrentSelection: (SearchResult value) {
+                                  setState(() {
+                                    _currentLocations = [];
+                                    _currentLocationSelected = true;
+                                    _currentLocationQuery = value;
+                                    _selectedMode = null;
+                                    _totalDistanceKm = null;
+                                    _estimatedTimeMinutes = null;
+                                  });
+                                },
+                                currentLocations: _currentLocations,
+                                destinationLocations: _destinationLocations,
+                                onDestinationSelection: (SearchResult value) {
+                                  setState(() {
+                                    _destinationLocations = [];
+                                    _destinationLocationSelected = true;
+                                    _destinationLocationQuery = value;
+                                    _selectedMode = null;
+                                    _totalDistanceKm = null;
+                                    _estimatedTimeMinutes = null;
+                                  });
+                                },
+
+                                onCurrentChanged: (String value) {
+                                  setState(() {
+                                    _currentLocationString = value;
+                                  });
+                                },
+                                onDestinationChanged: (String value) {
+                                  setState(() {
+                                    _destinationLocationString = value;
+                                  });
+                                },
                               ),
-
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-
-                                children: [
-                                  Text(
-                                    "Choose a mode of transportation",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: AppColors.subtitleText,
-                                    ),
+                              if (_currentLocationSelected &&
+                                  _destinationLocationSelected) ...[
+                                SizedBox(height: 10),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
                                   ),
-                                  SizedBox(height: 20),
-                                  Wrap(
-                                    runSpacing: 4,
-                                    spacing: 6,
-                                    alignment: WrapAlignment.center,
-                                    children: List.generate(
-                                      TransportModes.values.length,
-                                          (i) =>
-                                          ElevatedButton(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(30),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.08,
+                                        ),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 6),
+                                      ),
+                                    ],
+                                  ),
+
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+
+                                    children: [
+                                      Text(
+                                        "Choose a mode of transportation",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.subtitleText,
+                                        ),
+                                      ),
+                                      SizedBox(height: 20),
+                                      Wrap(
+                                        runSpacing: 4,
+                                        spacing: 6,
+                                        alignment: WrapAlignment.center,
+                                        children: List.generate(
+                                          TransportModes.values.length,
+                                          (i) => ElevatedButton(
                                             onPressed: () {
                                               double distanceKm =
-                                              MapService.calculateDistanceInKm(
-                                                startLatitude:
-                                                _currentLocationQuery!
-                                                    .lat!,
-                                                startLongitude:
-                                                _currentLocationQuery!
-                                                    .lon!,
-                                                endLatitude:
-                                                _destinationLocationQuery!
-                                                    .lat!,
-                                                endLongitude:
-                                                _destinationLocationQuery!
-                                                    .lon!,
-                                              );
+                                                  MapService.calculateDistanceInKm(
+                                                    startLatitude:
+                                                        _currentLocationQuery!
+                                                            .lat!,
+                                                    startLongitude:
+                                                        _currentLocationQuery!
+                                                            .lon!,
+                                                    endLatitude:
+                                                        _destinationLocationQuery!
+                                                            .lat!,
+                                                    endLongitude:
+                                                        _destinationLocationQuery!
+                                                            .lon!,
+                                                  );
 
                                               final mode =
-                                              TransportModes.values[i];
+                                                  TransportModes.values[i];
 
                                               setState(() {
                                                 _selectedMode = mode;
@@ -463,15 +469,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                             },
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor:
-                                              _selectedMode ==
-                                                  TransportModes.values[i]
+                                                  _selectedMode ==
+                                                      TransportModes.values[i]
                                                   ? AppColors
-                                                  .selectedOptionColor
-                                                  .withValues(alpha: 0.5)
+                                                        .selectedOptionColor
+                                                        .withValues(alpha: 0.5)
                                                   : AppColors
-                                                  .metricsBackgroundColor,
+                                                        .metricsBackgroundColor,
                                               foregroundColor:
-                                              AppColors.secondaryColor,
+                                                  AppColors.secondaryColor,
                                               shadowColor: Colors.transparent,
                                               side: BorderSide(
                                                 color: AppColors.secondaryColor
@@ -486,106 +492,101 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                               TransportModes.values[i].name,
                                             ),
                                           ),
-                                    ),
-                                  ),
-                                  if (_selectedMode != null) ...[
-                                    SizedBox(height: 20),
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        "Estimated Carbon Saved ☘️: ${CarbonCalculator
-                                            .emissionSaved(user.comparisonMode,
-                                            _totalDistanceKm!).toStringAsFixed(
-                                            2)} kg",
-                                        style: TextStyle(
-                                          color: AppColors.subtitleText,
                                         ),
                                       ),
-                                    ),
-                                    SizedBox(height: 6),
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        "Estimated Time Taken ⏱️: ${_estimatedTimeMinutes!
-                                            .toStringAsFixed(0)} min",
-                                        style: TextStyle(
-                                          color: AppColors.subtitleText,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 14),
-                                    Align(
-                                      alignment: Alignment.bottomRight,
-                                      child: ElevatedButton(
-                                        onPressed: _isStartingTrip
-                                            ? null
-                                            : () =>
-                                            _startTrip(
-                                              user.comparisonMode,
+                                      if (_selectedMode != null) ...[
+                                        SizedBox(height: 20),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            "Estimated Carbon Saved ☘️: ${(CarbonCalculator.emissionSaved(user.comparisonMode, _totalDistanceKm!) / 1000).toStringAsFixed(2)} kg",
+                                            style: TextStyle(
+                                              color: AppColors.subtitleText,
                                             ),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColors
-                                              .selectedOptionColor
-                                              .withValues(alpha: 0.5),
-                                          foregroundColor:
-                                          AppColors.secondaryColor,
-                                          shadowColor: Colors.transparent,
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 20,
-                                            vertical: 10,
-                                          ),
-                                          side: BorderSide(
-                                            color: AppColors.secondaryColor
-                                                .withValues(alpha: 0.4),
                                           ),
                                         ),
-                                        child: _isStartingTrip
-                                            ? SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child:
-                                          CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
+                                        SizedBox(height: 6),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            "Estimated Time Taken ⏱️: ${_estimatedTimeMinutes!.toStringAsFixed(0)} min",
+                                            style: TextStyle(
+                                              color: AppColors.subtitleText,
+                                            ),
                                           ),
-                                        )
-                                            : Text("Continue to route"),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
+                                        ),
+                                        SizedBox(height: 14),
+                                        Align(
+                                          alignment: Alignment.bottomRight,
+                                          child: ElevatedButton(
+                                            onPressed: _isStartingTrip
+                                                ? null
+                                                : () => _startTrip(
+                                                    user.comparisonMode,
+                                                  ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppColors
+                                                  .selectedOptionColor
+                                                  .withValues(alpha: 0.5),
+                                              foregroundColor:
+                                                  AppColors.secondaryColor,
+                                              shadowColor: Colors.transparent,
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 20,
+                                                vertical: 10,
+                                              ),
+                                              side: BorderSide(
+                                                color: AppColors.secondaryColor
+                                                    .withValues(alpha: 0.4),
+                                              ),
+                                            ),
+                                            child: _isStartingTrip
+                                                ? SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          color: Colors.white,
+                                                        ),
+                                                  )
+                                                : Text("Continue to route"),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+                    ],
 
-              if (_selectedMode == null)
-                Positioned(
-                  bottom: size.height * 0.05,
-                  right: 20,
-                  child: LocateButton(
-                    onPressed:
-                    _currentLocationString.isNotEmpty &&
-                        _destinationLocationString.isNotEmpty
-                        ? () {
-                      fetchAddresses(
-                        _currentLocationString,
-                        _destinationLocationString,
-                      );
-                    }
-                        : null,
-                    isLoading: _isLoading,
-                    isShowingMap: _startMapRoute,
-                  ),
+                    if (_selectedMode == null)
+                      Positioned(
+                        bottom: size.height * 0.05,
+                        right: 20,
+                        child: LocateButton(
+                          onPressed:
+                              _currentLocationString.isNotEmpty &&
+                                  _destinationLocationString.isNotEmpty
+                              ? () {
+                                  fetchAddresses(
+                                    _currentLocationString,
+                                    _destinationLocationString,
+                                  );
+                                }
+                              : null,
+                          isLoading: _isLoading,
+                          isShowingMap: _startMapRoute,
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 }

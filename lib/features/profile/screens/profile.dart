@@ -29,47 +29,58 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       TextEditingController();
   bool _controllerInitialized = false;
   bool _myDataExpanded = false;
-  ComparisonTransportMode? _comparisonTransportMode;
+
+  // ComparisonTransportMode? _comparisonTransportMode;
 
   Future<void> saveData() async {
     final user = ref.read(userProvider);
     if (user != null) {
       final weight = double.tryParse(_weightController.text) ?? user.weight;
-      await ref
-          .read(userProvider.notifier)
-          .updateUser(
-            user.copyWith(
-              weight: weight < 1 || weight > 500 ? user.weight : weight,
-              sustainabilityThoughts: _sustainabilityController.text,
-            ),
-          );
+      try {
+        await ref
+            .read(userProvider.notifier)
+            .updateUser(
+              user.copyWith(
+                weight: weight < 1 || weight > 500 ? user.weight : weight,
+                sustainabilityThoughts: _sustainabilityController.text,
+              ),
+            );
+      } catch (e) {
+        debugPrint('Error saving user data: $e');
+      }
     }
   }
 
   Future<void> onTransportSelection(bool selected, String label) async {
     final user = ref.read(userProvider);
     if (user != null) {
-      await ref
-          .read(userProvider.notifier)
-          .updateUser(
-            user.copyWith(
-              preferredTransports: selected
-                  ? user.preferredTransports.where((e) => e != label).toList()
-                  : [...user.preferredTransports, label],
-            ),
-          );
+      try {
+        await ref
+            .read(userProvider.notifier)
+            .updateUser(
+              user.copyWith(
+                preferredTransports: selected
+                    ? user.preferredTransports.where((e) => e != label).toList()
+                    : [...user.preferredTransports, label],
+              ),
+            );
+      } catch (e) {
+        debugPrint('Error updating preferred transports: $e');
+      }
     }
   }
 
   Future<void> onTrackingSelection(TrackingOption type) async {
-    {
-      final user = ref.read(userProvider);
-      if (user != null) {
+    final user = ref.read(userProvider);
+    if (user != null) {
+      try {
         await ref
             .read(userProvider.notifier)
             .updateUser(
               ref.read(userProvider)!.copyWith(trackingMode: type.name),
             );
+      } catch (e) {
+        debugPrint('Error updating tracking mode: $e');
       }
     }
   }
@@ -77,10 +88,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> updateComparisonMode(ComparisonTransportMode mode) async {
     final user = ref.read(userProvider);
     if (user != null) {
-      await ref
-          .read(userProvider.notifier)
-          .updateUser(user.copyWith(comparisonMode: mode));
-      setState(() => _comparisonTransportMode = mode);
+      try {
+        await ref
+            .read(userProvider.notifier)
+            .updateUser(user.copyWith(comparisonMode: mode));
+      } catch (e) {
+        debugPrint('Error updating comparison mode: $e');
+      }
     }
   }
 
@@ -98,7 +112,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _weightController.text = user.weight.toString();
       _sustainabilityController.text = user.sustainabilityThoughts ?? '';
       _controllerInitialized = true;
-      _comparisonTransportMode = user.comparisonMode;
     }
     return Scaffold(
       body: SafeArea(
@@ -123,7 +136,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   _sustainabilityController,
                 ),
                 const SizedBox(height: 24),
-                _buildComparisonModeCard(),
+                _buildComparisonModeCard(
+                  user?.comparisonMode ?? ComparisonTransportMode.car,
+                ),
                 const SizedBox(height: 16),
                 _buildMyDataCard(),
                 const SizedBox(height: 24),
@@ -460,7 +475,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildComparisonModeCard() {
+  Widget _buildComparisonModeCard(ComparisonTransportMode mode) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.metricsBackgroundColor,
@@ -480,25 +495,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Row(
             children: [
               TrackingOptionTile(
-                selected:
-                    _comparisonTransportMode == ComparisonTransportMode.car,
+                selected: mode == ComparisonTransportMode.car,
                 icon: Icons.directions_car,
                 label: 'Car',
                 onTap: () => updateComparisonMode(ComparisonTransportMode.car),
               ),
               const SizedBox(width: 10),
               TrackingOptionTile(
-                selected:
-                    _comparisonTransportMode == ComparisonTransportMode.bus,
+                selected: mode == ComparisonTransportMode.bus,
                 icon: Icons.directions_bus,
                 label: 'Bus',
                 onTap: () => updateComparisonMode(ComparisonTransportMode.bus),
               ),
               const SizedBox(width: 10),
               TrackingOptionTile(
-                selected:
-                    _comparisonTransportMode ==
-                    ComparisonTransportMode.electricCar,
+                selected: mode == ComparisonTransportMode.electricCar,
                 icon: Icons.electric_car,
                 label: 'Electric Car',
                 onTap: () =>

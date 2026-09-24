@@ -1,5 +1,3 @@
-import 'package:carbon_tracker/features/carbon/data/demo_data.dart';
-import 'package:carbon_tracker/features/carbon/helpers/carbon_calculator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
@@ -77,32 +75,28 @@ class DatabaseHelper {
               caloriesBurned REAL NOT NULL
             )
       ''');
+
+            await db.execute(
+              "ALTER TABLE user ADD COLUMN comparison_mode TEXT NOT NULL DEFAULT 'car'",
+            );
+
+            await db.execute('''
+             CREATE TABLE trips_new (
+             id INTEGER PRIMARY KEY AUTOINCREMENT,
+             date INTEGER NOT NULL,
+             distance REAL NOT NULL,
+             transport_mode TEXT NOT NULL,
+             carbon_saved REAL NOT NULL
+            )
+            ''');
+            await db.execute(
+              '''INSERT INTO trips_new (id, date, distance, transport_mode, carbon_saved)
+             SELECT id, date, distance, transport_mode, carbon_saved FROM trips
+           ''',
+            );
+            await db.execute('DROP TABLE trips');
+            await db.execute('ALTER TABLE trips_new RENAME TO trips');
           }
-
-          await db.execute('''
-            CREATE TABLE trips (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date INTEGER NOT NULL,
-            distance REAL NOT NULL,
-            transport_mode TEXT NOT NULL,
-            carbon_saved REAL NOT NULL
-          )
-        ''');
-
-          await db.execute('''
-            CREATE TABLE user (
-            id INTEGER PRIMARY KEY CHECK (id = 1),
-            name TEXT NOT NULL,
-            preferred_transports TEXT NOT NULL,
-            frequent_transports TEXT NOT NULL,
-            tracking_mode TEXT NOT NULL,
-            comparison_mode TEXT NOT NULL,
-            weight REAL NOT NULL,
-            sustainability_thoughts TEXT,
-            last_reset_month INTEGER NOT NULL,
-            last_reset_year INTEGER NOT NULL
-          )
-        ''');
         },
       );
 
@@ -182,6 +176,24 @@ class DatabaseHelper {
     }
   }
 
+  // Upsert multiple records into a table (insert or update if exists)
+
+  Future<void> upsertAll<T extends BaseModel>(String table, List<T> objs) async {
+    try {
+      final db = await getDB();
+      await db.transaction((txn) async {
+        final batch = txn.batch();
+        for (final obj in objs) {
+          batch.insert(table, obj.toMap(),
+              conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+        await batch.commit(noResult: true);
+      });
+    } on DatabaseException catch (e) {
+      throw AppDatabaseException("Failed to upsert into $table: $e");
+    }
+  }
+
   // Delete a record from a table by ID
 
   Future<int> deleteData(String table, int id) async {
@@ -220,8 +232,10 @@ class DatabaseHelper {
 
   // Query all trips for a specific user (not filtering by user since we have a single-user design)
 
-  Future<List<T>> queryAll<T>(String table,
-      T Function(Map<String, dynamic>) fromMap,) async {
+  Future<List<T>> queryAll<T>(
+    String table,
+    T Function(Map<String, dynamic>) fromMap,
+  ) async {
     try {
       final Database db = await getDB();
       List<Map<String, dynamic>> data = await db.query(table);
@@ -238,7 +252,7 @@ class DatabaseHelper {
       }
       return results;
     } on DatabaseException catch (e) {
-      throw AppDatabaseException("Failed to query trips: ${e.toString()}");
+      throw AppDatabaseException("Failed to query $table: ${e.toString()}");
     }
   }
 
@@ -305,65 +319,6 @@ class DatabaseHelper {
       await db.delete("trips");
     } on DatabaseException catch (e) {
       throw AppDatabaseException("Failed to reset database: ${e.toString()}");
-    }
-  }
-
-  // To initialize the database with some default user data (for testing purposes)
-
-  Future<void> initializeUser() async {
-    Map<String, dynamic> user = {
-      'id': 1,
-      'name': 'test user',
-      'preferred_transports': '["car", "bus"]',
-      'frequent_transports': '["car"]',
-      'tracking_mode': 'refresh',
-      'weight': 70.0,
-      'sustainability_thoughts': "I want to reduce my carbon footprint!",
-      'last_reset_month': DateTime
-          .now()
-          .month,
-      'last_reset_year': DateTime
-          .now()
-          .year,
-    };
-
-    try {
-      final Database db = await getDB();
-      final result = await db.query('user', where: 'id = ?', whereArgs: [1]);
-
-      if (result.isEmpty) {
-        await db.insert("user", user);
-      }
-    } on DatabaseException catch (e) {
-      throw AppDatabaseException(
-        "Failed to initialize user data: ${e.toString()}",
-      );
-    }
-  }
-
-  // To initialize the database with some default trips data (for testing purposes)
-
-  Future<void> initializeTrips() async {
-    try {
-      final Database db = await getDB();
-      await clearTrips(); // Clear existing trips before inserting demo data
-      await db.transaction((txn) async {
-        for (Map trip in trips) {
-          await txn.insert("trips", {
-            'date': trip['date'],
-            'distance': trip['distance'],
-            'transport_mode': trip['transport_mode'],
-            'carbon_saved': CarbonCalculator.emissionSaved(
-              trip['transport_mode'],
-              trip['distance'],
-            ),
-          });
-        }
-      });
-    } on DatabaseException catch (e) {
-      throw AppDatabaseException(
-        "Failed to initialize trips data: ${e.toString()}",
-      );
     }
   }
 }
