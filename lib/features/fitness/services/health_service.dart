@@ -2,9 +2,24 @@ import 'dart:io';
 import 'package:carbon_tracker/features/fitness/data/fitness_data.dart';
 import 'package:carbon_tracker/wearable/watch_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:health/health.dart';
 
-class HealthService {
+abstract class IHealthService {
+  Future<void> initialize();
+
+  Future<bool> hasGrantedPermissions();
+
+  Future<bool> requestPermissions();
+
+  Future<int> getTodaySteps();
+
+  Future<List<HealthDataPoint>> getHealthData();
+
+  Future<List<StatCardData>> generateData();
+}
+
+class HealthService implements IHealthService {
   static final HealthService _instance = HealthService._internal();
   static final _health = Health();
 
@@ -26,7 +41,8 @@ class HealthService {
 
   factory HealthService() => _instance;
 
-  static Future<void> initialize() async {
+  @override
+  Future<void> initialize() async {
     try {
       await _health.configure();
     } catch (e) {
@@ -35,7 +51,8 @@ class HealthService {
     }
   }
 
-  static Future<bool> hasGrantedPermissions() async {
+  @override
+  Future<bool> hasGrantedPermissions() async {
     try {
       return (await _health.hasPermissions(_types)) ?? false;
     } catch (e) {
@@ -46,9 +63,10 @@ class HealthService {
 
   // Request permissions to access health data
 
-  static Future<bool> requestPermissions() async {
+  @override
+  Future<bool> requestPermissions() async {
     try {
-      await HealthService.initialize();
+      await _instance.initialize();
       bool isAuthorized = await hasGrantedPermissions();
 
       if (isAuthorized) {
@@ -64,7 +82,8 @@ class HealthService {
 
   // Get today's steps
 
-  static Future<int> getTodaySteps() async {
+  @override
+  Future<int> getTodaySteps() async {
     try {
       DateTime now = DateTime.now();
       DateTime midnight = DateTime(now.year, now.month, now.day);
@@ -78,7 +97,8 @@ class HealthService {
 
   // Get health data for today
 
-  static Future<List<HealthDataPoint>> getHealthData() async {
+  @override
+  Future<List<HealthDataPoint>> getHealthData() async {
     try {
       DateTime now = DateTime.now();
       DateTime midnight = DateTime(now.year, now.month, now.day);
@@ -96,7 +116,8 @@ class HealthService {
 
   // Generate fitness metrics data from health data
 
-  static Future<List<StatCardData>> generateData() async {
+  @override
+  Future<List<StatCardData>> generateData() async {
     double distanceSum = 0.0;
     double caloriesSum = 0.0;
     double? heartRate;
@@ -106,11 +127,10 @@ class HealthService {
     int steps = 0;
 
     try {
-      List<HealthDataPoint> healthDataList =
-          await HealthService.getHealthData();
+      List<HealthDataPoint> healthDataList = await _instance.getHealthData();
       DateTime? latestHeartRateTime;
 
-      steps = await HealthService.getTodaySteps();
+      steps = await _instance.getTodaySteps();
 
       for (final point in healthDataList) {
         HealthValue value = point.value;
@@ -156,3 +176,7 @@ class HealthService {
     ).getStats();
   }
 }
+
+final healthServiceProvider = Provider<IHealthService>(
+  (ref) => HealthService(),
+);

@@ -5,6 +5,7 @@ import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
 import 'package:carbon_tracker/database/models/trips.dart';
 import 'package:carbon_tracker/features/carbon/helpers/carbon_calculator.dart';
+import 'package:carbon_tracker/features/map/helpers/time_calculator.dart';
 import 'package:carbon_tracker/features/map/models/search_results.dart';
 import 'package:carbon_tracker/features/map/repositories/trip_repository.dart';
 import 'package:carbon_tracker/features/map/services/location_service.dart';
@@ -13,13 +14,33 @@ import 'package:carbon_tracker/features/map/widgets/location_card.dart';
 import 'package:carbon_tracker/features/map/widgets/map_modal.dart';
 import 'package:carbon_tracker/features/map/widgets/map_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
+
+typedef MapUiBuilder = Widget Function({
+required double currentLat,
+required double currentLon,
+required double destinationLat,
+required double destinationLon,
+required RoadType type,
+});
+
 class MapScreen extends ConsumerStatefulWidget {
   final bool isActive;
+  final MapService mapOb;
+  final TripRepository tripRepo;
+  final MapUiBuilder mapUiBuilder;
 
-  const MapScreen({super.key, required this.isActive});
+  MapScreen({
+    super.key,
+    required this.isActive,
+    this.mapOb = const MapService(),
+    TripRepository? tripRepo,
+    MapUiBuilder? mapUiBuilder,
+  }) : tripRepo = tripRepo ?? TripRepository(),
+        mapUiBuilder = mapUiBuilder ?? MapUI.new;
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
@@ -43,8 +64,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   bool _isLoading = false;
   bool _isStartingTrip = false;
 
-  final TripRepository _tripRepository = TripRepository();
-
   @override
   void didUpdateWidget(covariant MapScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -65,7 +84,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         _errMessage = "";
       });
 
-      final Map<String, dynamic> res = await MapService.isPermissionGranted();
+      final Map<String, dynamic> res = await widget.mapOb.isPermissionGranted();
       if (!mounted) return;
       if (!res['status']) {
         setState(() {
@@ -76,11 +95,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         return;
       }
 
-      Position position = await MapService.getCurrentPosition();
-      SearchResult? location = await MapService.retrieveAddressFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
+      Position position = await widget.mapOb.getCurrentPosition();
+      SearchResult? location = await widget.mapOb
+          .retrieveAddressFromCoordinates(
+            position.latitude,
+            position.longitude,
+          );
 
       if (!mounted) return;
 
@@ -121,7 +141,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       setState(() {
         _isLoading = true;
       });
-      final searchResult = await MapService.queryPlaces(current, destination);
+      final searchResult = await widget.mapOb.queryPlaces(current, destination);
 
       if (!mounted) return;
 
@@ -161,15 +181,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     });
   }
 
-  double _calculateTime(double distanceKm, TransportModes mode) {
-    final speed = switch (mode) {
-      TransportModes.walk => 5.0,
-      TransportModes.run => 8.0,
-      TransportModes.bike => 15.0,
-    };
-    return (distanceKm / speed) * 60; // minutes
-  }
-
   Future<void> _startTrip(ComparisonTransportMode comparisonMode) async {
     if (_selectedMode == null || _totalDistanceKm == null) return;
 
@@ -178,7 +189,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     });
 
     try {
-      int id = await _tripRepository.startTrip(
+      int id = await widget.tripRepo.startTrip(
         Trip(
           date: DateTime.now(),
           distance: _totalDistanceKm!,
@@ -244,13 +255,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                           _startMapRoute &&
                               _currentLocationQuery != null &&
                               _destinationLocationQuery != null
-                          ? MapUI(
-                              currentLat: _currentLocationQuery!.lat!,
-                              currentLon: _currentLocationQuery!.lon!,
-                              destinationLat: _destinationLocationQuery!.lat!,
-                              destinationLon: _destinationLocationQuery!.lon!,
-                              type: getRoadType(_selectedMode!),
-                            )
+                          ?  widget.mapUiBuilder(
+                                    currentLat: _currentLocationQuery!.lat!,
+                                    currentLon: _currentLocationQuery!.lon!,
+                                    destinationLat:
+                                        _destinationLocationQuery!.lat!,
+                                    destinationLon:
+                                        _destinationLocationQuery!.lon!,
+                                    type: getRoadType(_selectedMode!),
+                                  )
                           : Opacity(
                               opacity: 0.7,
                               child: Image.asset(
@@ -295,7 +308,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                     _currentLocationQuery!.locationString!,
                                     _destinationLocationQuery!.locationString!,
                                     () async {
-                                      await _tripRepository.cancelTrip(
+                                      await widget.tripRepo.cancelTrip(
                                         _currentTripId!,
                                       );
                                       await ref
@@ -438,8 +451,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                           TransportModes.values.length,
                                           (i) => ElevatedButton(
                                             onPressed: () {
-                                              double distanceKm =
-                                                  MapService.calculateDistanceInKm(
+                                              double distanceKm = widget.mapOb
+                                                  .calculateDistanceInKm(
                                                     startLatitude:
                                                         _currentLocationQuery!
                                                             .lat!,
@@ -461,7 +474,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                                 _selectedMode = mode;
                                                 _totalDistanceKm = distanceKm;
                                                 _estimatedTimeMinutes =
-                                                    _calculateTime(
+                                                    calculateTime(
                                                       distanceKm,
                                                       mode,
                                                     );

@@ -148,7 +148,8 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
     }
 
     if (Platform.isIOS) {
-      bool permissionGranted = await HealthService.requestPermissions();
+      HealthService healthService = HealthService();
+      bool permissionGranted = await healthService.requestPermissions();
 
       if (!mounted) return;
 
@@ -392,7 +393,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
                   context,
                   trackingModesInfo["title"] ?? "Tracking modes",
                   trackingModesInfo["description"] ?? "",
-                  'Close'
+                  'Close',
                 );
               },
               child: Text(
