@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:sqflite/sqflite.dart';
 
 class FitnessMetricsScreen extends ConsumerStatefulWidget {
   const FitnessMetricsScreen({super.key});
@@ -85,8 +84,10 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
         return;
       }
 
-      await getStats();
-      await getExerciseData();
+      await Future.wait([
+        getStats(),
+        if (Platform.isAndroid) getExerciseData(),
+      ]);
     } catch (e) {
       debugPrint('Error during refresh: $e');
     } finally {
@@ -101,19 +102,6 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   Future<void> getExerciseData() async {
     try {
       await WatchService.getExerciseData();
-      List<ActivityData> activityData = await _dbHelper.queryAll(
-        'activity_data',
-        ActivityData.fromMap,
-      );
-      activityData.sort((a, b) => b.startTime.compareTo(a.startTime));
-      if (mounted) {
-        debugPrint(
-          'Fetched ${activityData.length} activities from the database',
-        );
-        setState(() {
-          activities = activityData;
-        });
-      }
     } on TimeoutException catch (e) {
       debugPrint('Timeout while fetching exercise data: $e');
     } on PlatformException catch (e) {
@@ -126,6 +114,17 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
       );
     } catch (e) {
       debugPrint('Error while fetching exercise data: $e');
+    }
+    try {
+      final activityData = await _dbHelper.queryAll(
+        'activity_data',
+        ActivityData.fromMap,
+      );
+      activityData.sort((a, b) => b.startTime.compareTo(a.startTime));
+      if (!mounted) return;
+      setState(() => activities = activityData);
+    } catch (e) {
+      debugPrint('Error while loading stored activities: $e');
     }
   }
 

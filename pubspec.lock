@@ -335,18 +335,18 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_osm_plugin
-      sha256: a6de3a801e18fab097e434691eea2c8a81102fd511516e04b053d45a6189c80a
+      sha256: "275c4df687dc6541de4f1cffc1123c1c3af6b83a55d8bb2b14f912b3b057a31c"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0+1"
+    version: "2.0.2"
   flutter_osm_web:
     dependency: transitive
     description:
       name: flutter_osm_web
-      sha256: "8b1f6219bf57e3fff3a5d7a95cb23d75026439085a758d3a48bdffefdd3a0d97"
+      sha256: "1dfd27ecec6d8957a017a6bff30bd59b8623f1ae790b73ed2771717cea374e6d"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0"
+    version: "2.0.1"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:

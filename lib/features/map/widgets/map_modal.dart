@@ -100,8 +100,7 @@ void showMapModal(
                             Navigator.pop(context);
                           },
                           style: TextButton.styleFrom(
-                            backgroundColor: AppColors.secondaryColor
-                                .withValues(alpha: 0.6),
+                            backgroundColor: AppColors.secondaryColor,
                             foregroundColor: AppColors.primaryColor,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -140,8 +139,7 @@ void showMapModal(
                                   }
                                 },
                           style: TextButton.styleFrom(
-                            backgroundColor: AppColors.secondaryColor
-                                .withValues(alpha: 0.6),
+                            backgroundColor: AppColors.secondaryColor,
                             foregroundColor: AppColors.primaryColor,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,

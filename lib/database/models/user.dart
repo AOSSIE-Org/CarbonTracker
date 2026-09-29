@@ -1,13 +1,14 @@
 import 'dart:convert';
 
+import 'package:carbon_tracker/core/enums/comparison_modes.dart';
 import 'package:carbon_tracker/database/models/base_model.dart';
 
 class User extends BaseModel {
   final String name;
   final List<dynamic> preferredTransports;
   final List<dynamic> frequentTransports;
-  final String
-  trackingMode; // Default tracking mode; other modes will be supported later
+  final String trackingMode;
+  final ComparisonTransportMode comparisonMode;
   final double weight;
   final String? sustainabilityThoughts;
   final int lastResetMonth;
@@ -21,8 +22,11 @@ class User extends BaseModel {
     required this.preferredTransports,
     required this.frequentTransports,
     required this.weight,
-    this.trackingMode = "refresh",
+    this.trackingMode =
+        "refresh", // Default tracking mode; other modes will be supported later
     this.sustainabilityThoughts,
+    this.comparisonMode =
+        ComparisonTransportMode.car, // Default comparison mode;
     required this.lastResetMonth,
     required this.lastResetYear,
   });
@@ -36,6 +40,9 @@ class User extends BaseModel {
       preferredTransports: jsonDecode(map['preferred_transports']),
       frequentTransports: jsonDecode(map['frequent_transports']),
       trackingMode: map['tracking_mode'],
+      comparisonMode: ComparisonTransportMode.values.byName(
+        map['comparison_mode'],
+      ),
       weight: (map['weight'] as num).toDouble(),
       sustainabilityThoughts: map['sustainability_thoughts'],
       lastResetMonth: map['last_reset_month'],
@@ -51,6 +58,7 @@ class User extends BaseModel {
       'preferred_transports': jsonEncode(preferredTransports),
       'frequent_transports': jsonEncode(frequentTransports),
       'tracking_mode': trackingMode,
+      'comparison_mode': comparisonMode.name,
       'weight': weight,
       'sustainability_thoughts': sustainabilityThoughts,
       'last_reset_month': lastResetMonth,
@@ -65,6 +73,7 @@ class User extends BaseModel {
     String? trackingMode,
     double? weight,
     String? sustainabilityThoughts,
+    ComparisonTransportMode? comparisonMode,
     int? lastResetMonth,
     int? lastResetYear,
   }) {
@@ -75,7 +84,9 @@ class User extends BaseModel {
       frequentTransports: frequentTransports ?? this.frequentTransports,
       trackingMode: trackingMode ?? this.trackingMode,
       weight: weight ?? this.weight,
-      sustainabilityThoughts: sustainabilityThoughts ?? this.sustainabilityThoughts,
+      sustainabilityThoughts:
+          sustainabilityThoughts ?? this.sustainabilityThoughts,
+      comparisonMode: comparisonMode ?? this.comparisonMode,
       lastResetMonth: lastResetMonth ?? this.lastResetMonth,
       lastResetYear: lastResetYear ?? this.lastResetYear,
     );

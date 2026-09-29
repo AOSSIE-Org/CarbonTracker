@@ -6,8 +6,6 @@ import 'package:carbon_tracker/features/carbon/widgets/carbon_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum Type { emitted, saved }
-
 class CarbonTrackerScreen extends ConsumerStatefulWidget {
   const CarbonTrackerScreen({super.key});
 
@@ -26,7 +24,7 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _CarbonEmittedTodayCard(),
+              const _CarbonSavedTodayCard(),
               const SizedBox(height: 20),
               const _WeeklyImpactCard(),
               const SizedBox(height: 20),
@@ -34,20 +32,8 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
                 children: const [
                   Expanded(
                     child: _StatCard(
-                      icon: Icons.cloud_off_outlined,
-                      label: 'Total Emitted This\nWeek',
-                      type: Type.emitted,
-                      background: Colors.white,
-                      foreground: Colors.black87,
-                      iconColor: Colors.black45,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
                       icon: Icons.eco_outlined,
                       label: 'Total Saved This\nWeek',
-                      type: Type.saved,
                       background: AppColors.oliveGreen,
                       foreground: Colors.white,
                       iconColor: Colors.white,
@@ -101,17 +87,17 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
   }
 }
 
-class _CarbonEmittedTodayCard extends ConsumerWidget {
-  const _CarbonEmittedTodayCard();
+class _CarbonSavedTodayCard extends ConsumerWidget {
+  const _CarbonSavedTodayCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
         Text(
-          'CARBON EMITTED TODAY',
+          'CARBON SAVED TODAY',
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 16,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
             color: AppColors.secondaryColor,
@@ -123,10 +109,7 @@ class _CarbonEmittedTodayCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              ref
-                      .watch(summaryProvider)
-                      ?.todayCarbonEmitted
-                      .toStringAsFixed(2) ??
+              ref.watch(summaryProvider)?.totalCarbonSavedToday.toStringAsFixed(2) ??
                   '0.00',
               style: const TextStyle(
                 fontSize: 64,
@@ -206,13 +189,7 @@ class _WeeklyImpactCard extends StatelessWidget {
                   color: Colors.black87,
                 ),
               ),
-              Row(
-                children: [
-                  _LegendDot(color: Colors.grey.shade400, label: 'Emitted'),
-                  const SizedBox(width: 12),
-                  _LegendDot(color: AppColors.oliveGreen, label: 'Saved'),
-                ],
-              ),
+              _LegendDot(color: AppColors.oliveGreen, label: 'Saved'),
             ],
           ),
           const SizedBox(height: 20),
@@ -253,7 +230,6 @@ class _LegendDot extends StatelessWidget {
 class _StatCard extends ConsumerWidget {
   final IconData icon;
   final String label;
-  final Type type; // 'emitted' or 'saved'
   final Color background;
   final Color foreground;
   final Color iconColor;
@@ -261,7 +237,6 @@ class _StatCard extends ConsumerWidget {
   const _StatCard({
     required this.icon,
     required this.label,
-    required this.type,
     required this.background,
     required this.foreground,
     required this.iconColor,
@@ -269,7 +244,6 @@ class _StatCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final totalEmitted = ref.watch(summaryProvider)?.totalCarbonEmitted ?? 0.0;
     final totalSaved = ref.watch(summaryProvider)?.totalCarbonSaved ?? 0.0;
     return Container(
       padding: const EdgeInsets.all(18),
@@ -295,9 +269,7 @@ class _StatCard extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            type == Type.emitted
-                ? '${totalEmitted.toStringAsFixed(2)} kg'
-                : '${totalSaved.toStringAsFixed(2)} kg',
+            '${totalSaved.toStringAsFixed(2)} kg',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w600,

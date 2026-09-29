@@ -66,12 +66,6 @@ class CarbonChart extends ConsumerWidget {
                   x: i,
                   barRods: [
                     BarChartRodData(
-                      toY: data.carbonEmitted,
-                      color: Colors.grey.shade400,
-                      width: 10,
-                      borderRadius: BorderRadius.zero,
-                    ),
-                    BarChartRodData(
                       toY: data.carbonSaved,
                       color: AppColors.oliveGreen,
                       width: 10,
@@ -86,7 +80,7 @@ class CarbonChart extends ConsumerWidget {
                 sideTitles: SideTitles(showTitles: false),
                 axisNameWidget: Center(
                   child: Text(
-                    'Emissions (kg)',
+                    'Saved (kg)',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,

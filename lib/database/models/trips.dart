@@ -4,7 +4,6 @@ class Trip extends BaseModel {
   final DateTime date;
   final double distance;
   final String transportMode;
-  final double carbonEmitted;
   final double carbonSaved;
 
   Trip({
@@ -12,19 +11,15 @@ class Trip extends BaseModel {
     required this.date,
     required this.distance,
     required this.transportMode,
-    // For now these are supported foot, bus, cycle, car
-    // metro, train can be added later
-    required this.carbonEmitted,
     required this.carbonSaved,
   });
 
   factory Trip.fromMap(Map<String, dynamic> map) {
     return Trip(
       id: map['id'],
-      date: DateTime.fromMillisecondsSinceEpoch(map['date']  as int),
+      date: DateTime.fromMillisecondsSinceEpoch(map['date'] as int),
       distance: (map['distance'] as num).toDouble(),
       transportMode: map['transport_mode'],
-      carbonEmitted: map['carbon_emitted'],
       carbonSaved: map['carbon_saved'],
     );
   }
@@ -36,7 +31,6 @@ class Trip extends BaseModel {
       'date': date.millisecondsSinceEpoch,
       'distance': distance,
       'transport_mode': transportMode,
-      'carbon_emitted': carbonEmitted,
       'carbon_saved': carbonSaved,
     };
   }
