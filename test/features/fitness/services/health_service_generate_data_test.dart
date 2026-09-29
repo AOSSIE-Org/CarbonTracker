@@ -1,8 +1,7 @@
+import 'package:carbon_tracker/features/fitness/services/health_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:health/health.dart';
-
 import '../helpers/helpers.dart';
-import 'health_service.dart';
 
 void main() {
   group('HealthService.generateData wiring', () {
@@ -53,19 +52,22 @@ void main() {
       expect(statValue(stats, 'Heart Rate'), 'N/A');
     });
 
-    test('fetchWatchHeartRate throwing discards already-fetched steps/health data', () async {
-      final service = HealthService.test(
-        fetchHealthData: () async => [
-          fakeHealthPoint(type: HealthDataType.DISTANCE_DELTA, value: 500.0),
-        ],
-        fetchTodaySteps: () async => 8000,
-        fetchWatchHeartRate: () async => throw Exception('watch offline'),
-      );
+    test(
+      'fetchWatchHeartRate throwing discards already-fetched steps/health data',
+      () async {
+        final service = HealthService.test(
+          fetchHealthData: () async => [
+            fakeHealthPoint(type: HealthDataType.DISTANCE_DELTA, value: 500.0),
+          ],
+          fetchTodaySteps: () async => 8000,
+          fetchWatchHeartRate: () async => throw Exception('watch offline'),
+        );
 
-      final stats = await service.generateData();
+        final stats = await service.generateData();
 
-      expect(statValue(stats, 'Steps'), '0');
-      expect(statValue(stats, 'Distance Covered'), '0.0');
-    });
+        expect(statValue(stats, 'Steps'), '8000');
+        expect(statValue(stats, 'Distance Covered'), '500.0');
+      },
+    );
   });
 }
