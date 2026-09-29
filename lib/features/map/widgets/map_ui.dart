@@ -56,6 +56,7 @@ class _MapUIState extends State<MapUI> {
       );
     } catch (e) {
       debugPrint('Error drawing road: $e');
+      if(!mounted) return;
       setState(() {
         _routeError = 'Failed to draw route';
       });

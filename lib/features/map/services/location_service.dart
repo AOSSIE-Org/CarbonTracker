@@ -10,9 +10,9 @@ class MapService {
   // Determine the current position of the device.
   static bool _configured = false;
 
-  MapService._();
+  const MapService();
 
-  static Future<Map<String, dynamic>> isPermissionGranted() async {
+  Future<Map<String, dynamic>> isPermissionGranted() async {
 
     LocationPermission permission;
 
@@ -43,7 +43,7 @@ class MapService {
     return {'status': true};
   }
 
-  static Future<Position> getCurrentPosition() async {
+  Future<Position> getCurrentPosition() async {
     try {
       final LocationSettings locationSettings = LocationSettings(
         accuracy: LocationAccuracy.high,
@@ -59,7 +59,7 @@ class MapService {
     }
   }
 
-  static void configure() {
+  void configure() {
     if (_configured) return;
 
     // Configure Nominatim settings
@@ -74,7 +74,7 @@ class MapService {
     _configured = true;
   }
 
-  static Future<SearchResult?> retrieveAddressFromCoordinates(
+  Future<SearchResult?> retrieveAddressFromCoordinates(
     double latitude,
     double longitude,
   ) async {
@@ -109,7 +109,7 @@ class MapService {
     }
   }
 
-  static Future<List<NominatimResponse>> _makeSearch(String query) async {
+  Future<List<NominatimResponse>> _makeSearch(String query) async {
     // Make a search request using Nominatim
 
     try {
@@ -136,7 +136,7 @@ class MapService {
     }
   }
 
-  static Future<SearchOptions> queryPlaces(
+  Future<SearchOptions> queryPlaces(
     String currentQuery,
     String destinationQuery,
   ) async {
@@ -185,7 +185,7 @@ class MapService {
     );
   }
 
-  static double calculateDistanceInKm({
+  double calculateDistanceInKm({
     required double startLatitude,
 
     required double startLongitude,

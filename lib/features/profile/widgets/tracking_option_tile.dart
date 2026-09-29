@@ -6,6 +6,7 @@ class TrackingOptionTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final String type;
 
   const TrackingOptionTile({
     super.key,
@@ -13,12 +14,14 @@ class TrackingOptionTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    required this.type,
   });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: GestureDetector(
+        key: Key('$type-$label'),
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),

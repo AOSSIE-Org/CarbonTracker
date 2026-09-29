@@ -4,6 +4,8 @@ import 'package:carbon_tracker/database/models/trips.dart';
 class TripRepository {
   final DatabaseHelper _db = DatabaseHelper();
 
+  TripRepository();
+
   Future<int> startTrip(Trip trip) {
     return _db.insert('trips', trip);
   }

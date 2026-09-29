@@ -91,7 +91,14 @@ class WatchService {
 
     final completer = _exerciseDataCompleter;
 
-    await _platform.invokeMethod('getExerciseData');
+    try {
+      await _platform.invokeMethod('getExerciseData');
+    } catch (_) {
+      if (identical(_exerciseDataCompleter, completer)) {
+        _exerciseDataCompleter = null;
+      }
+      rethrow;
+    }
 
     await completer!.future.timeout(const Duration(seconds: 5));
   }

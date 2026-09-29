@@ -30,11 +30,13 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   bool _permissionsGranted = false;
   double heartRate = 0.0;
   List<ActivityData> activities = [];
+  late final IHealthService _healthService;
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
+    _healthService = ref.read(healthServiceProvider);
     _onRefresh();
   }
 
@@ -46,7 +48,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
 
   Future<void> getStats() async {
     List<StatCardData> data = [];
-    data = await HealthService.generateData();
+    data = await _healthService.generateData();
     debugPrint('Generated stats: ${data.length}');
     if (!mounted) return;
     setState(() {
@@ -74,7 +76,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
         return;
       }
 
-      if (!await HealthService.requestPermissions()) {
+      if (!await _healthService.requestPermissions()) {
         if (!mounted) return;
         setState(() {
           _stats = [];
