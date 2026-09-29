@@ -10,6 +10,7 @@ final tripProvider = NotifierProvider<TripsNotifier, List<Trip>>(
 class TripsNotifier extends Notifier<List<Trip>> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   int _generation = 0;
+
   @override
   List<Trip> build() {
     Future.microtask(() => loadTrips());
@@ -19,7 +20,7 @@ class TripsNotifier extends Notifier<List<Trip>> {
   Future<List<Trip>> loadTrips() async {
     final currentGeneration = _generation;
     try {
-      final trips = await _databaseHelper.queryAllTrips();
+      final trips = await _databaseHelper.queryAll('trips', Trip.fromMap);
 
       if (currentGeneration != _generation) {
         return state;
@@ -35,7 +36,6 @@ class TripsNotifier extends Notifier<List<Trip>> {
 
   Future<void> deleteTrips() async {
     try {
-
       // Invalidate any load that started before the deletion.
       _generation++;
 

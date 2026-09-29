@@ -1,3 +1,4 @@
+import 'package:carbon_tracker/database/models/activity.dart';
 import 'package:carbon_tracker/features/carbon/data/demo_data.dart';
 import 'package:carbon_tracker/features/carbon/helpers/carbon_calculator.dart';
 import 'package:flutter/foundation.dart';
@@ -26,7 +27,7 @@ class DatabaseHelper {
     try {
       Database db = await openDatabase(
         path,
-        version: 1,
+        version: 2,
         onCreate: (Database db, int version) async {
           await db.execute('''
             CREATE TABLE user (
@@ -51,6 +52,33 @@ class DatabaseHelper {
             carbon_saved REAL NOT NULL
           )
         ''');
+
+          await db.execute('''
+            CREATE TABLE activity_data (
+            id INTEGER PRIMARY KEY,
+            activityType TEXT NOT NULL,
+            startTime INTEGER NOT NULL,
+            heartRate REAL,
+            endTime INTEGER,
+            distance REAL NOT NULL,
+            caloriesBurned REAL NOT NULL
+          )
+    ''');
+        },
+        onUpgrade: (Database db, int oldVersion, int newVersion) async {
+          if (oldVersion < 2) {
+            await db.execute('''
+              CREATE TABLE activity_data (
+              id INTEGER PRIMARY KEY,
+              activityType TEXT NOT NULL,
+              startTime INTEGER NOT NULL,
+              heartRate REAL,
+              endTime INTEGER,
+              distance REAL NOT NULL,
+              caloriesBurned REAL NOT NULL
+            )
+      ''');
+          }
         },
       );
 
@@ -90,7 +118,9 @@ class DatabaseHelper {
     }
   }
 
-  // CRUD operations (applying to both User and Trip models)
+  // CRUD operations (applying to both User, Trip and activity_data models)
+
+  // Insert a record into a table
 
   Future<int> insert<T extends BaseModel>(String table, T obj) async {
     try {
@@ -102,6 +132,8 @@ class DatabaseHelper {
       );
     }
   }
+
+  // Update a record in a table by ID
 
   Future<int> updateData<T extends BaseModel>(String table, T obj) async {
     try {
@@ -125,6 +157,8 @@ class DatabaseHelper {
       throw AppDatabaseException("Failed to update database ${e.toString()}");
     }
   }
+
+  // Delete a record from a table by ID
 
   Future<int> deleteData(String table, int id) async {
     try {
@@ -162,13 +196,25 @@ class DatabaseHelper {
 
   // Query all trips for a specific user (not filtering by user since we have a single-user design)
 
-  Future<List<Trip>> queryAllTrips() async {
+  Future<List<T>> queryAll<T>(
+    String table,
+    T Function(Map<String, dynamic>) fromMap,
+  ) async {
     try {
       final Database db = await getDB();
-      List<Map<String, dynamic>> tripMap = await db.query("trips");
-      debugPrint("Queried trips: ${tripMap.length} records found");
+      List<Map<String, dynamic>> data = await db.query(table);
+      debugPrint("Queried Data: ${data.length} records found");
 
-      return tripMap.map((item) => Trip.fromMap(item)).toList();
+      final List<T> results = [];
+      for (final item in data) {
+        try {
+          results.add(fromMap(item));
+        } catch (e) {
+          debugPrint('Error: $e');
+          rethrow;
+        }
+      }
+      return results;
     } on DatabaseException catch (e) {
       throw AppDatabaseException("Failed to query trips: ${e.toString()}");
     }

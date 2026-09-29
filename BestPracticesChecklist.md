@@ -136,7 +136,7 @@
 - [x] 🔵 **build_common_tools** — Common build tools are used (npm, pip, cargo, make, gradle, etc.). *(SUGGESTED)*
     - *Evidence URL:* https://github.com/AOSSIE-Org/CarbonTracker/blob/main/android/build.gradle.kts
 
-- [~] 🟡 **build_floss_tools** — The project can be built using only FLOSS tools.
+- [ ] 🟡 **build_floss_tools** — The project can be built using only FLOSS tools.
     - *Note:* `[ ]` N/A
 
 ### Automated Testing

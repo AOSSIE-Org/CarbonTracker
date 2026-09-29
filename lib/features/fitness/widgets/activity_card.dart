@@ -1,9 +1,12 @@
-import 'package:carbon_tracker/features/fitness/data/fitness_data.dart';
+import 'package:carbon_tracker/database/models/activity.dart';
+import 'package:carbon_tracker/features/fitness/ui/activity_style.dart';
 import 'package:flutter/material.dart';
 import 'package:carbon_tracker/core/config/app_constants.dart';
 
+import 'package:carbon_tracker/core/helpers/date_format.dart';
+
 class ActivityCard extends StatefulWidget {
-  final Activity activity;
+  final ActivityData activity;
 
   const ActivityCard({super.key, required this.activity});
 
@@ -16,6 +19,8 @@ class ActivityCardState extends State<ActivityCard> {
 
   @override
   Widget build(BuildContext context) {
+    ActivityKind kind = ActivityKind.fromDb(widget.activity.activityType);
+    ActivityStyle style = ActivityStyle.forKind(kind);
     return AnimatedSize(
       duration: Duration(milliseconds: 500),
       alignment: Alignment.topLeft,
@@ -35,14 +40,10 @@ class ActivityCardState extends State<ActivityCard> {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: widget.activity.bgColor,
+                    color: style.bgColor,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(
-                    widget.activity.icon,
-                    color: widget.activity.iconColor,
-                    size: 24,
-                  ),
+                  child: Icon(style.icon, color: style.iconColor, size: 24),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -51,7 +52,7 @@ class ActivityCardState extends State<ActivityCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.activity.name,
+                        kind.label,
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
@@ -59,7 +60,8 @@ class ActivityCardState extends State<ActivityCard> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        widget.activity.time,
+                        '${formatDate(widget.activity.startTime)} '
+                        '(${widget.activity.endTime == null ? "ongoing" : "${formatTime(widget.activity.startTime)} - ${formatTime(widget.activity.endTime!)}"})',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.minisculeText,
@@ -93,18 +95,22 @@ class ActivityCardState extends State<ActivityCard> {
                     children: [
                       _ActivityStat(
                         label: 'Calories',
-                        value: widget.activity.calories,
+                        value: widget.activity.caloriesBurned.toStringAsFixed(
+                          2,
+                        ),
                         unit: 'kcal',
                       ),
                       _ActivityStat(
                         label: 'Distance',
-                        value: widget.activity.distance,
+                        value: widget.activity.distance.toStringAsFixed(2),
                         unit: 'km',
                       ),
                       _ActivityStat(
-                        label: 'Avg. Pace',
-                        value: widget.activity.pace,
-                        unit: '/km',
+                        label: 'Heart Rate',
+                        value: widget.activity.heartRate != null
+                            ? widget.activity.heartRate!.toStringAsFixed(0)
+                            : 'N/A',
+                        unit: 'bpm',
                       ),
                     ],
                   ),
@@ -150,7 +156,7 @@ class _ActivityStat extends StatelessWidget {
                 color: Color(0xFF2C2C2A),
               ),
             ),
-            const SizedBox(width: 2),
+            const SizedBox(width: 4),
             Text(
               unit,
               style: const TextStyle(fontSize: 11, color: Color(0xFF888780)),
