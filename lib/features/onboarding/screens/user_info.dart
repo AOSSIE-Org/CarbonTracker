@@ -4,9 +4,9 @@ import 'package:carbon_tracker/core/data/tracking_options.dart';
 import 'package:carbon_tracker/core/data/transport_preferences.dart';
 import 'package:carbon_tracker/core/widgets/loader.dart';
 import 'package:carbon_tracker/database/models/user.dart';
-import 'package:carbon_tracker/features/fitness/services/health_service.dart';
 import 'package:carbon_tracker/features/onboarding/data/tracking_modes_info.dart';
-import 'package:carbon_tracker/features/onboarding/services/matchmaking_service.dart';
+import 'package:carbon_tracker/features/onboarding/providers/matchmaking_provider.dart';
+import 'package:carbon_tracker/features/onboarding/providers/permissions_provider.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
 import 'package:carbon_tracker/features/onboarding/widgets/watch_modal.dart';
 import 'package:flutter/material.dart';
@@ -112,7 +112,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
       _isLoading = true;
     });
 
-    result = await MatchmakingService.showMatchmakingModal();
+    result = result = await ref.read(matchmakingRunnerProvider)();
 
     if (mounted) {
       setState(() {
@@ -148,8 +148,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
     }
 
     if (Platform.isIOS) {
-      HealthService healthService = HealthService();
-      bool permissionGranted = await healthService.requestPermissions();
+      bool permissionGranted = await ref.read(healthPermissionProvider)();
 
       if (!mounted) return;
 

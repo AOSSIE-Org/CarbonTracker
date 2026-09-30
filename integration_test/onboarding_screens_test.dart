@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:carbon_tracker/database/database_helper.dart';
 import 'package:carbon_tracker/features/fitness/screens/main_screen.dart';
 import 'package:carbon_tracker/features/onboarding/providers/matchmaking_provider.dart';
 import 'package:carbon_tracker/features/onboarding/providers/permissions_provider.dart';
@@ -13,6 +14,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('new user can complete onboarding', (tester) async {
+    await DatabaseHelper().resetDB();
+
     // 1. Launch the app with fake permission steps
     await tester.pumpWidget(
       ProviderScope(
