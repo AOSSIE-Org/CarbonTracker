@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:health/health.dart';
 
+
 abstract class IHealthService {
   Future<void> initialize();
 
@@ -37,7 +38,28 @@ class HealthService implements IHealthService {
         : HealthDataType.TOTAL_CALORIES_BURNED,
   ];
 
-  HealthService._internal();
+  HealthService._internal({
+    Future<List<HealthDataPoint>> Function()? fetchHealthData,
+    Future<int> Function()? fetchTodaySteps,
+    Future<double?> Function()? fetchWatchHeartRate,
+  }) : _fetchHealthData = fetchHealthData,
+       _fetchTodaySteps = fetchTodaySteps,
+       _fetchWatchHeartRate = fetchWatchHeartRate;
+
+  final Future<List<HealthDataPoint>> Function()? _fetchHealthData;
+  final Future<int> Function()? _fetchTodaySteps;
+  final Future<double?> Function()? _fetchWatchHeartRate;
+
+  @visibleForTesting
+  factory HealthService.test({
+    required Future<List<HealthDataPoint>> Function() fetchHealthData,
+    required Future<int> Function() fetchTodaySteps,
+    required Future<double?> Function() fetchWatchHeartRate,
+  }) => HealthService._internal(
+    fetchHealthData: fetchHealthData,
+    fetchTodaySteps: fetchTodaySteps,
+    fetchWatchHeartRate: fetchWatchHeartRate,
+  );
 
   factory HealthService() => _instance;
 
@@ -62,7 +84,6 @@ class HealthService implements IHealthService {
   }
 
   // Request permissions to access health data
-
   @override
   Future<bool> requestPermissions() async {
     try {
@@ -81,7 +102,6 @@ class HealthService implements IHealthService {
   }
 
   // Get today's steps
-
   @override
   Future<int> getTodaySteps() async {
     try {
@@ -96,7 +116,6 @@ class HealthService implements IHealthService {
   }
 
   // Get health data for today
-
   @override
   Future<List<HealthDataPoint>> getHealthData() async {
     try {
@@ -114,56 +133,49 @@ class HealthService implements IHealthService {
     }
   }
 
-  // Generate fitness metrics data from health data
-
-  @override
-  Future<List<StatCardData>> generateData() async {
+  @visibleForTesting
+  static List<StatCardData> aggregateFitnessMetrics({
+    required List<HealthDataPoint> healthDataList,
+    required int steps,
+    double? watchHeartRateFallback,
+  }) {
     double distanceSum = 0.0;
     double caloriesSum = 0.0;
     double? heartRate;
     double bloodPressureSystolic = 0.0;
     double bloodPressureDiastolic = 0.0;
     int floorsClimbed = 0;
-    int steps = 0;
+    DateTime? latestHeartRateTime;
 
-    try {
-      List<HealthDataPoint> healthDataList = await _instance.getHealthData();
-      DateTime? latestHeartRateTime;
+    for (final point in healthDataList) {
+      HealthValue value = point.value;
 
-      steps = await _instance.getTodaySteps();
+      debugPrint('Health Data Point: ${point.type}');
 
-      for (final point in healthDataList) {
-        HealthValue value = point.value;
-
-        debugPrint('Health Data Point: ${point.type}');
-
-        if (value is NumericHealthValue) {
-          if (point.type == HealthDataType.DISTANCE_WALKING_RUNNING ||
-              point.type == HealthDataType.DISTANCE_DELTA) {
-            distanceSum += value.numericValue;
-          } else if (point.type == HealthDataType.ACTIVE_ENERGY_BURNED ||
-              point.type == HealthDataType.TOTAL_CALORIES_BURNED) {
-            caloriesSum += value.numericValue;
-          } else if (point.type == HealthDataType.FLIGHTS_CLIMBED) {
-            floorsClimbed += value.numericValue.toInt();
-          } else if (point.type == HealthDataType.HEART_RATE) {
-            if (latestHeartRateTime == null ||
-                point.dateTo.isAfter(latestHeartRateTime)) {
-              latestHeartRateTime = point.dateTo;
-              heartRate = value.numericValue.toDouble();
-            }
-          } else if (point.type == HealthDataType.BLOOD_PRESSURE_SYSTOLIC) {
-            // to be implemented
+      if (value is NumericHealthValue) {
+        if (point.type == HealthDataType.DISTANCE_WALKING_RUNNING ||
+            point.type == HealthDataType.DISTANCE_DELTA) {
+          distanceSum += value.numericValue;
+        } else if (point.type == HealthDataType.ACTIVE_ENERGY_BURNED ||
+            point.type == HealthDataType.TOTAL_CALORIES_BURNED) {
+          caloriesSum += value.numericValue;
+        } else if (point.type == HealthDataType.FLIGHTS_CLIMBED) {
+          floorsClimbed += value.numericValue.toInt();
+        } else if (point.type == HealthDataType.HEART_RATE) {
+          if (latestHeartRateTime == null ||
+              point.dateTo.isAfter(latestHeartRateTime)) {
+            latestHeartRateTime = point.dateTo;
+            heartRate = value.numericValue.toDouble();
           }
-          if (point.type == HealthDataType.BLOOD_PRESSURE_DIASTOLIC) {
-            // to be implemented based on watch connection
-          }
+        } else if (point.type == HealthDataType.BLOOD_PRESSURE_SYSTOLIC) {
+          // to be implemented
+        }
+        if (point.type == HealthDataType.BLOOD_PRESSURE_DIASTOLIC) {
+          // to be implemented based on watch connection
         }
       }
-      heartRate ??= await WatchService.getHeartRate();
-    } catch (e) {
-      debugPrint('Failed to fetch health data : $e');
     }
+    heartRate ??= watchHeartRateFallback;
 
     return FitnessMetrics(
       steps: steps,
@@ -174,6 +186,37 @@ class HealthService implements IHealthService {
       bloodPressureSystolic: bloodPressureSystolic,
       bloodPressureDiastolic: bloodPressureDiastolic,
     ).getStats();
+  }
+
+  // Generate fitness metrics data from health data
+
+  @override
+  Future<List<StatCardData>> generateData() async {
+    final fetchHealthData = _fetchHealthData ?? getHealthData;
+    final fetchTodaySteps = _fetchTodaySteps ?? getTodaySteps;
+    final fetchWatchHeartRate =
+        _fetchWatchHeartRate ?? WatchService.getHeartRate;
+
+    try {
+      final healthDataList = await fetchHealthData();
+      final steps = await fetchTodaySteps();
+      double? watchHeartRate;
+
+      try {
+        watchHeartRate = await fetchWatchHeartRate();
+      } catch (e) {
+        debugPrint('Failed to fetch watch heart rate : $e');
+      }
+
+      return aggregateFitnessMetrics(
+        healthDataList: healthDataList,
+        steps: steps,
+        watchHeartRateFallback: watchHeartRate,
+      );
+    } catch (e) {
+      debugPrint('Failed to fetch health data : $e');
+      return aggregateFitnessMetrics(healthDataList: [], steps: 0);
+    }
   }
 }
 

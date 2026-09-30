@@ -6,8 +6,8 @@ import 'package:carbon_tracker/core/widgets/loader.dart';
 import 'package:carbon_tracker/database/models/user.dart';
 import 'package:carbon_tracker/features/onboarding/data/tracking_modes_info.dart';
 import 'package:carbon_tracker/features/onboarding/providers/matchmaking_provider.dart';
-import 'package:carbon_tracker/features/onboarding/providers/permissions_provider.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
+import 'package:carbon_tracker/features/onboarding/providers/permissions_provider.dart';
 import 'package:carbon_tracker/features/onboarding/widgets/watch_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -112,7 +112,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
       _isLoading = true;
     });
 
-    result = result = await ref.read(matchmakingRunnerProvider)();
+    result = await ref.read(matchmakingRunnerProvider)();
 
     if (mounted) {
       setState(() {
