@@ -14,6 +14,8 @@ PODS:
     - FlutterMacOS
   - health (13.3.1):
     - Flutter
+  - integration_test (0.0.1):
+    - Flutter
   - OSMFlutterFramework (0.8.7)
   - package_info_plus (0.4.5):
     - Flutter
@@ -35,6 +37,7 @@ DEPENDENCIES:
   - flutter_osm_plugin (from `.symlinks/plugins/flutter_osm_plugin/ios`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/darwin`)
   - health (from `.symlinks/plugins/health/ios`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
@@ -59,6 +62,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/geolocator_apple/darwin"
   health:
     :path: ".symlinks/plugins/health/ios"
+  integration_test:
+    :path: ".symlinks/plugins/integration_test/ios"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
   permission_handler_apple:
@@ -77,6 +82,7 @@ SPEC CHECKSUMS:
   flutter_osm_plugin: 10e3da6f02c314759e4e8d8af33f5d7e6039e042
   geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
   health: 4decf5d74e8f54c58a8c07a385fc72f629a831d9
+  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
   OSMFlutterFramework: e380e68110bb354faca12db0e5fca7a6c2fd0bd0
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   permission_handler_apple: 92d754bbaa7361d436db2d6c3c1c2a0fdcec462e
@@ -86,6 +92,6 @@ SPEC CHECKSUMS:
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   Yams: e10dae147f517ed57ecae37c5e8681bdf8fcab65
 
-PODFILE CHECKSUM: ae9e65fc23486119b8e977fd41d9213f251e537a
+PODFILE CHECKSUM: 57f7429380aab56118a4d05550418474894b56a2
 
 COCOAPODS: 1.16.2
