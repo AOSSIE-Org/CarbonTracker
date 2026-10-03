@@ -35,12 +35,12 @@ Future<void> showWatchModal(BuildContext context) {
                           child: Image.asset(
                             'assets/images/watch-onboarding.png',
                             fit: BoxFit.contain,
-                            width: MediaQuery.of(context).size.width * 0.4,
+                            width: MediaQuery.of(context).size.width * 0.6,
                             semanticLabel:
                                 "Watch onboarding image representing eco-friendliness and sustainability",
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         Text(
                           "Install the Carbon Tracker companion watch app and the Google Pixel Watch app on your Android smartwatch to start tracking activities directly from your wrist. Your activities will automatically sync with Carbon Tracker, where you can view your activity history and see the estimated carbon footprint associated with each activity. Your privacy comes first. All activity data collected from your watch is stored locally on your devices and is never uploaded to or stored on our servers. You remain in control of your data at all times. Stay active, stay informed, and let’s make more carbon-conscious choices together.",
                           style: TextStyle(
