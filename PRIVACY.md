@@ -28,6 +28,17 @@ CarbonTracker may also receive fitness data from smartwatches through their asso
 
 The collection, processing, or storage of your information by these third-party wearable applications is governed by their respective privacy policies. CarbonTracker does not control the privacy practices of these third-party applications.
 
+
+## Wear OS Companion App
+
+CarbonTracker provides a companion application for Wear OS devices that can collect fitness and exercise data, such as activity type, duration, heart rate, distance, and calories burned, when you use the available fitness tracking features.
+
+Fitness data collected by the Wear OS companion app is stored locally on the wearable device and is transferred to the CarbonTracker mobile app through the device’s secure wearable connection via Bluetooth. The data is not uploaded to CarbonTracker servers or stored in cloud storage.
+
+The Wear OS companion app may retain activity data on the wearable device until it has been successfully transferred to the CarbonTracker mobile app. Once the data has been successfully received and stored by the mobile app, the corresponding data may be removed from the wearable device as part of the synchronization process.
+
+CarbonTracker does not use the Wear OS companion app to collect data independently for advertising, analytics, or other purposes unrelated to the App’s fitness and carbon-tracking features.
+
 ## Data Storage and Deletion
 
 CarbonTracker does not maintain a remote database or cloud storage containing your personal, health, fitness, location, or trip information.

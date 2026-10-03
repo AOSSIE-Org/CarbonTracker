@@ -285,7 +285,8 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
 
                     const SizedBox(height: 30),
 
-                    if (Platform.isAndroid) _buildRecentActivity(),
+                    if (Platform.isAndroid && !_isRefreshing)
+                      _buildRecentActivity(),
                   ],
                 ),
               ),

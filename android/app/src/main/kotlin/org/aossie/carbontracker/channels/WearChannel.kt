@@ -8,6 +8,7 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.wearable.Wearable
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import org.json.JSONArray
 
 object WearChannel {
 
@@ -88,11 +89,43 @@ object WearChannel {
                                                 "WearChannel",
                                                 "Sent /requestExerciseData successfully"
                                             )
+
+                                            result.success(true)
                                         }
                                         .addOnFailureListener {
                                             Log.e(
                                                 "WearChannel",
                                                 "Failed to send /requestExerciseData",
+                                                it
+                                            )
+
+                                            result.error(
+                                                "WearChannel",
+                                                "Failed to send /requestExerciseData: ${it.message}",
+                                                null
+                                            )
+                                        }
+                                } else if (call.method == "exerciseDataReceived") {
+
+                                    val data = call.argument<List<Map<String, Any>>>("data")
+                                    val dataJson = JSONArray(data).toString()
+
+                                    Wearable.getMessageClient(context)
+                                        .sendMessage(
+                                            node.id,
+                                            "/markExercisesAsSynced",
+                                            dataJson.toByteArray()
+                                        )
+                                        .addOnSuccessListener {
+                                            Log.d(
+                                                "WearChannel",
+                                                "Sent /markExercisesAsSynced successfully"
+                                            )
+                                        }
+                                        .addOnFailureListener {
+                                            Log.e(
+                                                "WearChannel",
+                                                "Failed to send /markExercisesAsSynced",
                                                 it
                                             )
                                         }

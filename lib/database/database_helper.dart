@@ -58,7 +58,8 @@ class DatabaseHelper {
             heartRate REAL,
             endTime INTEGER,
             distance REAL NOT NULL,
-            caloriesBurned REAL NOT NULL
+            caloriesBurned REAL NOT NULL,
+            lastUpdated INTEGER NOT NULL
           )
     ''');
         },
@@ -72,7 +73,8 @@ class DatabaseHelper {
               heartRate REAL,
               endTime INTEGER,
               distance REAL NOT NULL,
-              caloriesBurned REAL NOT NULL
+              caloriesBurned REAL NOT NULL,
+              lastUpdated INTEGER NOT NULL
             )
       ''');
 
