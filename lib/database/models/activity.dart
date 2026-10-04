@@ -7,6 +7,7 @@ class ActivityData extends BaseModel {
   final int? endTime;
   final double distance;
   final double caloriesBurned;
+  final int lastUpdated;
 
   ActivityData({
     super.id,
@@ -16,23 +17,28 @@ class ActivityData extends BaseModel {
     this.endTime,
     this.distance = 0.0,
     this.caloriesBurned = 0.0,
+    required this.lastUpdated,
   });
 
   factory ActivityData.fromMap(Map<String, dynamic> map) {
+    final int start = map['startTime'] as int;
+    final int? end = map['endTime'] as int?;
+
     return ActivityData(
       id: map['id'],
       activityType: map['activityType'],
-      startTime: map['startTime'],
+      startTime: start,
       heartRate: map['heartRate'] != null
           ? (map['heartRate'] as num).toDouble()
           : null,
-      endTime: map['endTime'],
+      endTime: end,
       distance: map['distance'] != null
           ? (map['distance'] as num).toDouble()
           : 0.0,
       caloriesBurned: map['caloriesBurned'] != null
           ? (map['caloriesBurned'] as num).toDouble()
           : 0.0,
+      lastUpdated: (map['lastUpdated'] as num?)?.toInt() ?? end ?? start,
     );
   }
 
@@ -46,6 +52,7 @@ class ActivityData extends BaseModel {
       'endTime': endTime,
       'distance': distance,
       'caloriesBurned': caloriesBurned,
+      'lastUpdated': lastUpdated,
     };
   }
 }

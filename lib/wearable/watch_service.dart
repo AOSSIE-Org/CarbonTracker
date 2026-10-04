@@ -41,10 +41,17 @@ class WatchService {
               .map((item) => ActivityData.fromMap(item as Map<String, dynamic>))
               .toList();
 
-          await dbHelper.upsertAll(
-            'activity_data',
-            exercises.where((e) => e.id != null).toList(),
-          );
+          final exercisesWithIds = exercises
+              .where((e) => e.id != null)
+              .toList();
+
+          await dbHelper.upsertAll('activity_data', exercisesWithIds);
+
+          final ids = exercisesWithIds
+              .map((e) => {'id': e.id, 'lastUpdated': e.lastUpdated})
+              .toList();
+
+          await _platform.invokeMethod('exerciseDataReceived', {'data': ids});
 
           if (!completer.isCompleted) completer.complete();
         } catch (e, stackTrace) {
@@ -55,18 +62,6 @@ class WatchService {
     }
   }
 
-  static Future<void> checkWatchConnection() async {
-    try {
-      final bool isConnected =
-          await _platform.invokeMethod('checkWearConnection') ?? false;
-      debugPrint('Watch connection status: $isConnected');
-    } on PlatformException catch (e) {
-      debugPrint('Failed to check watch connection: ${e.message}');
-    } on MissingPluginException catch (e) {
-      debugPrint('Missing plugin exception: ${e.message}');
-    }
-  }
-
   static Future<double?> getHeartRate() async {
     _heartRateCompleter = Completer<double?>();
     try {
@@ -74,7 +69,7 @@ class WatchService {
       return await _heartRateCompleter!.future.timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          debugPrint('Heart rate request timed out — no response from watch');
+          debugPrint('Heart rate request timed out, no response from watch');
           return null;
         },
       );
