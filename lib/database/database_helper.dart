@@ -24,7 +24,7 @@ class DatabaseHelper {
     try {
       Database db = await openDatabase(
         path,
-        version: 2,
+        version: 3,
         onCreate: (Database db, int version) async {
           await db.execute('''
             CREATE TABLE user (
@@ -73,8 +73,7 @@ class DatabaseHelper {
               heartRate REAL,
               endTime INTEGER,
               distance REAL NOT NULL,
-              caloriesBurned REAL NOT NULL,
-              lastUpdated INTEGER NOT NULL
+              caloriesBurned REAL NOT NULL
             )
       ''');
 
@@ -98,6 +97,16 @@ class DatabaseHelper {
             );
             await db.execute('DROP TABLE trips');
             await db.execute('ALTER TABLE trips_new RENAME TO trips');
+          }
+
+          if (oldVersion < 3) {
+            await db.execute(
+              'ALTER TABLE activity_data ADD COLUMN lastUpdated INTEGER NOT NULL DEFAULT 0',
+            );
+
+            await db.execute(
+              'UPDATE activity_data SET lastUpdated = COALESCE(endTime, startTime)',
+            );
           }
         },
       );
@@ -180,14 +189,20 @@ class DatabaseHelper {
 
   // Upsert multiple records into a table (insert or update if exists)
 
-  Future<void> upsertAll<T extends BaseModel>(String table, List<T> objs) async {
+  Future<void> upsertAll<T extends BaseModel>(
+    String table,
+    List<T> objs,
+  ) async {
     try {
       final db = await getDB();
       await db.transaction((txn) async {
         final batch = txn.batch();
         for (final obj in objs) {
-          batch.insert(table, obj.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace);
+          batch.insert(
+            table,
+            obj.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
         }
         await batch.commit(noResult: true);
       });

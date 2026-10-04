@@ -33,11 +33,19 @@ object WearChannel {
                     nodeClient.connectedNodes
                         .addOnSuccessListener { nodes ->
 
-                            if (nodes.isNotEmpty()) {
+                            val node = nodes.firstOrNull { it.isNearby }
 
-                                val node = nodes.first()
+                            if (node == null) {
+                                result.error(
+                                    "WearChannel",
+                                    "No nearby connected nodes found",
+                                    null
+                                )
+                                return@addOnSuccessListener
+                            }
 
-                                if (call.method == "getHeartRate") {
+                            when (call.method) {
+                                "getHeartRate" -> {
 
 
                                     Log.d(
@@ -72,7 +80,9 @@ object WearChannel {
                                             )
                                         }
 
-                                } else if (call.method == "getExerciseData") {
+                                }
+
+                                "getExerciseData" -> {
                                     Log.d(
                                         "WearChannel",
                                         "Sending exercise data request to node: ${node.displayName}"
@@ -105,9 +115,21 @@ object WearChannel {
                                                 null
                                             )
                                         }
-                                } else if (call.method == "exerciseDataReceived") {
+                                }
+
+                                "exerciseDataReceived" -> {
 
                                     val data = call.argument<List<Map<String, Any>>>("data")
+
+                                    if (data == null) {
+                                        result.error(
+                                            "WearChannel",
+                                            "Missing 'data' argument",
+                                            null
+                                        )
+                                        return@addOnSuccessListener
+                                    }
+
                                     val dataJson = JSONArray(data).toString()
 
                                     Wearable.getMessageClient(context)
@@ -121,6 +143,8 @@ object WearChannel {
                                                 "WearChannel",
                                                 "Sent /markExercisesAsSynced successfully"
                                             )
+
+                                            result.success(true)
                                         }
                                         .addOnFailureListener {
                                             Log.e(
@@ -128,62 +152,29 @@ object WearChannel {
                                                 "Failed to send /markExercisesAsSynced",
                                                 it
                                             )
+                                            result.error(
+                                                "WearChannel",
+                                                "Failed to send /markExercisesAsSynced: ${it.message}",
+                                                null
+                                            )
                                         }
-                                } else {
+                                }
+
+                                else -> {
                                     result.notImplemented()
                                 }
-                            } else {
-                                result.error(
-                                    "WearChannel",
-                                    "No connected nodes found",
-                                    null
-                                )
                             }
+
                         }
 
+                        .addOnFailureListener { exception ->
+                            result.error(
+                                "WearChannel",
+                                "Failed to get connected nodes: ${exception.message}",
+                                null
+                            )
+                        }
 
-//                                if (call.method == "checkWearConnection") {
-//
-//
-//
-//                                }
-
-
-//                            Log.d(
-//                                "WearChannel",
-//                                "Connected nodes: ${nodes.map { it.isNearby }}"
-//                            )
-
-//                                nodes
-//                                    .filter { it.isNearby }
-//                                    .forEach { node ->
-//
-//                                        Log.d(
-//                                            "WearChannel",
-//                                            "Sending request to node: ${node.displayName}"
-//                                        )
-//                                        Wearable.getMessageClient(context)
-//                                            .sendMessage(
-//                                                node.id,
-//                                                "/requestWatchData",
-//                                                ByteArray(0)
-//                                            )
-//                                            .addOnSuccessListener {
-//                                                Log.d(
-//                                                    "WearChannel",
-//                                                    "Message sent successfully to ${node.displayName}"
-//                                                )
-//                                            }
-//                                            .addOnFailureListener { exception ->
-//                                                Log.e(
-//                                                    "WearChannel",
-//                                                    "Failed to send message to ${node.displayName}",
-//                                                    exception
-//                                                )
-//
-//                                            }
-
-//                                result.success(true)
                 }
                 .addOnFailureListener { exception ->
                     result.error(
@@ -193,18 +184,6 @@ object WearChannel {
                     )
                 }
         }
-
-
-//            else if (call.method == "getHeartRate") {
-//                val healthServicesManager = HealthServicesManager(context)
-//                val heartRate = healthServicesManager.getHeartRate()
-//
-//                result.success(heartRate)
-//            }
-//
-//            else {
-//                result.notImplemented()
-//            }
     }
 
 

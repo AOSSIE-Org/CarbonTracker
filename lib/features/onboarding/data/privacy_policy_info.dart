@@ -13,11 +13,11 @@ Information and Permissions
 Depending on the features you use and the permissions you grant, CarbonTracker
 may access:
 
-• Name and other information you provide in the App
-• Fitness and health data through Health Connect or HealthKit
-• Location information
-• Trip and travel information
-• Transport and tracking preferences
+- Name and other information you provide in the App
+- Fitness and health data through Health Connect or HealthKit
+- Location information
+- Trip and travel information
+- Transport and tracking preferences
 
 This information is processed and stored locally on your device. CarbonTracker
 does not upload this information to our servers or maintain cloud storage for it.
@@ -48,14 +48,12 @@ fitness and exercise data, such as activity type, duration, heart rate, distance
 and calories burned, when you use the available fitness tracking features.
 
 Fitness data collected by the Wear OS companion app is stored locally on the wearable
-device and is transferred to the CarbonTracker mobile app through the device’s secure
-wearable connection via Bluetooth. The data is not uploaded to CarbonTracker servers
-or stored in cloud storage.
+device and is transferred to the CarbonTracker mobile app over the wearable connection
+provided by Google's Wearable Data Layer. The data is not uploaded to CarbonTracker
+servers or stored in cloud storage.
 
-The Wear OS companion app may retain activity data on the wearable device until it has
-been successfully transferred to the CarbonTracker mobile app. Once the data has been
-successfully received and stored by the mobile app, the corresponding data may be removed
-from the wearable device as part of the synchronization process.
+The Wear OS companion app may retain activity data on the wearable device. After the
+mobile app confirms it has received and stored the data, the watch app marks it as synced.
 
 CarbonTracker does not use the Wear OS companion app to collect data independently for
 advertising, analytics, or other purposes unrelated to the App’s fitness and carbon-tracking features.
@@ -88,13 +86,19 @@ Data Sharing
 
 We do not:
 
-• Sell your personal information.
-• Use your health or fitness data for advertising.
-• Upload your personal, health, fitness, location, or trip data to our servers.
-• Automatically share your locally stored data with third parties.
+- Sell your personal information.
+- Use your health or fitness data for advertising.
+- Upload your personal, health, fitness, location, or trip data to our servers.
 
-Data may be shared with a third-party app or service only when you explicitly
-choose to do so through the device's sharing interface.
+Data may be shared with third parties in only two situations:
+
+- Location lookup: When you use location-based features, CarbonTracker sends
+location coordinates to the Nominatim geocoding service to convert them into an
+address. This is the only data CarbonTracker sends to a third party automatically,
+and it is governed by Nominatim's own privacy practices.
+- Exports you choose to share: If you export your trip history, the file is shared
+with a third-party app or service only when you explicitly choose to do so through
+the device's sharing interface.
 
 Children's Privacy
 

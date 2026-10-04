@@ -1,6 +1,4 @@
 import 'package:carbon_tracker/core/config/app_constants.dart';
-import 'package:carbon_tracker/core/widgets/modal.dart';
-import 'package:carbon_tracker/features/carbon/data/carbon_modal_data.dart';
 import 'package:carbon_tracker/features/carbon/providers/summary_provider.dart';
 import 'package:carbon_tracker/features/carbon/widgets/carbon_chart.dart';
 import 'package:flutter/material.dart';
@@ -41,44 +39,7 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 28),
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      "Nature's Recommendations",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-
-                  IconButton(
-                    onPressed: () {
-                      showInfoModal(
-                        context,
-                        carbonModalTitle,
-                        carbonModalData,
-                        "Close",
-                      );
-                    },
-                    tooltip: 'More information about carbon footprint',
-                    icon: const Icon(Icons.info_outline, color: Colors.black87),
-                  ),
-                ],
-              ),
-              // const SizedBox(height: 14),
-              // const _RecommendationCard(
-              //   icon: Icons.directions_walk,
-              //   title: 'You traveled 400m by car.',
-              //   highlight: '0.2 kg CO₂',
-              //   bodyPrefix: 'Walking could have saved ',
-              //   bodySuffix:
-              //       '. The weather today is perfect for a short stroll.',
-              // ),
-              // const SizedBox(height: 16),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -284,74 +245,3 @@ class _StatCard extends ConsumerWidget {
     );
   }
 }
-
-// class _RecommendationCard extends StatelessWidget {
-//   final IconData icon;
-//   final String title;
-//   final String highlight;
-//   final String bodyPrefix;
-//   final String bodySuffix;
-//
-//   const _RecommendationCard({
-//     required this.icon,
-//     required this.title,
-//     required this.highlight,
-//     required this.bodyPrefix,
-//     required this.bodySuffix,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.all(18),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(20),
-//         border: Border.all(color: AppColors.greyBorder),
-//       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Row(
-//             children: [
-//               Icon(icon, size: 20, color: Colors.black87),
-//               const SizedBox(width: 10),
-//               Expanded(
-//                 child: Text(
-//                   title,
-//                   style: const TextStyle(
-//                     fontSize: 15,
-//                     fontWeight: FontWeight.w600,
-//                     color: Colors.black87,
-//                   ),
-//                 ),
-//               ),
-//             ],
-//           ),
-//           const SizedBox(height: 10),
-//           RichText(
-//             text: TextSpan(
-//               style: const TextStyle(
-//                 fontSize: 14,
-//                 color: Colors.black54,
-//                 height: 1.4,
-//               ),
-//               children: [
-//                 TextSpan(text: bodyPrefix),
-//                 TextSpan(
-//                   text: highlight,
-//                   style: TextStyle(
-//                     fontWeight: FontWeight.w700,
-//                     color: AppColors.secondaryColor,
-//                   ),
-//                 ),
-//                 TextSpan(text: bodySuffix),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

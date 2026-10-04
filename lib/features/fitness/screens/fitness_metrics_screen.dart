@@ -40,10 +40,6 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
     _onRefresh();
   }
 
-  Future<void> isWatchConnected() async {
-    await WatchService.checkWatchConnection();
-  }
-
   // Fetch health data and update the state
 
   Future<void> getStats() async {

@@ -3,8 +3,10 @@
 ## Introduction
 
 CarbonTracker is designed with a privacy-first, local-first approach.
-We do not collect, upload, sell, or store your personal, health, fitness, location, or trip data on our servers.
-Information used by CarbonTracker is kept on your device and is used only to provide the features of the App.
+We do not collect, upload, sell, or store your personal, health, fitness, location, or trip data on
+our servers.
+Information used by CarbonTracker is kept on your device and is used only to provide the features of
+the App.
 
 ## Information and Permissions
 
@@ -16,42 +18,61 @@ Depending on the features you use and the permissions you grant, CarbonTracker m
 - Trip and travel information
 - Transport and tracking preferences
 
-This information is processed and stored locally on your device. CarbonTracker does not upload this information to our servers or maintain cloud storage for it.
+This information is processed and stored locally on your device. CarbonTracker does not upload this
+information to our servers or maintain cloud storage for it.
 
-When location-based features are used, CarbonTracker may send location coordinates to the Nominatim geocoding service to convert coordinates into an address. CarbonTracker does not store this location data on its own servers. The handling of data by Nominatim is governed by its own privacy practices.
+When location-based features are used, CarbonTracker may send location coordinates to the Nominatim
+geocoding service to convert coordinates into an address. CarbonTracker does not store this location
+data on its own servers. The handling of data by Nominatim is governed by its own privacy practices.
 
-You can deny or revoke permissions at any time through your device settings. Some features may not work if the required permissions are not granted.
+You can deny or revoke permissions at any time through your device settings. Some features may not
+work if the required permissions are not granted.
 
 ## Watch Connectivity
 
-CarbonTracker may also receive fitness data from smartwatches through their associated wearable applications, when those applications are connected to Android Health Connect or Apple HealthKit.
+CarbonTracker may also receive fitness data from smartwatches through their associated wearable
+applications, when those applications are connected to Android Health Connect or Apple HealthKit.
 
-The collection, processing, or storage of your information by these third-party wearable applications is governed by their respective privacy policies. CarbonTracker does not control the privacy practices of these third-party applications.
-
+The collection, processing, or storage of your information by these third-party wearable
+applications is governed by their respective privacy policies. CarbonTracker does not control the
+privacy practices of these third-party applications.
 
 ## Wear OS Companion App
 
-CarbonTracker provides a companion application for Wear OS devices that can collect fitness and exercise data, such as activity type, duration, heart rate, distance, and calories burned, when you use the available fitness tracking features.
+CarbonTracker provides a companion application for Wear OS devices that can collect fitness and
+exercise data, such as activity type, duration, heart rate, distance, and calories burned, when you
+use the available fitness tracking features.
 
-Fitness data collected by the Wear OS companion app is stored locally on the wearable device and is transferred to the CarbonTracker mobile app through the device’s secure wearable connection via Bluetooth. The data is not uploaded to CarbonTracker servers or stored in cloud storage.
+Fitness data collected by the Wear OS companion app is stored locally on the wearable device and is
+transferred to the CarbonTracker mobile app over the wearable connection provided by Google's
+Wearable Data Layer. The data is not uploaded to CarbonTracker servers or stored in cloud storage.
 
-The Wear OS companion app may retain activity data on the wearable device until it has been successfully transferred to the CarbonTracker mobile app. Once the data has been successfully received and stored by the mobile app, the corresponding data may be removed from the wearable device as part of the synchronization process.
+The Wear OS companion app may retain activity data on the wearable device. After the mobile app
+confirms it has received and stored the data, the watch app marks it as synced.
 
-CarbonTracker does not use the Wear OS companion app to collect data independently for advertising, analytics, or other purposes unrelated to the App’s fitness and carbon-tracking features.
+CarbonTracker does not use the Wear OS companion app to collect data independently for advertising,
+analytics, or other purposes unrelated to the App’s fitness and carbon-tracking features.
 
 ## Data Storage and Deletion
 
-CarbonTracker does not maintain a remote database or cloud storage containing your personal, health, fitness, location, or trip information.
+CarbonTracker does not maintain a remote database or cloud storage containing your personal, health,
+fitness, location, or trip information.
 
-Data used by the App remains on your device and can be removed using the available data-clearing features within the App or by removing the App from your device.
+Data used by the App remains on your device and can be removed using the available data-clearing
+features within the App or by removing the App from your device.
 
-The App also automatically removes older trip history per month as part of its local data management.
+The App also automatically removes older trip history per month as part of its local data
+management.
 
 ## Data Export
 
 CarbonTracker allows you to export your trip history as a JSON file.
 
-The exported file is created and stored on your device. When you choose to share the exported file, CarbonTracker opens the device's system sharing interface, and the file is shared only with the app or service you select. CarbonTracker does not upload the exported file to its own servers. You are responsible for protecting any exported files and for how they are subsequently handled by the app or service you choose.
+The exported file is created and stored on your device. When you choose to share the exported file,
+CarbonTracker opens the device's system sharing interface, and the file is shared only with the app
+or service you select. CarbonTracker does not upload the exported file to its own servers. You are
+responsible for protecting any exported files and for how they are subsequently handled by the app
+or service you choose.
 
 ## Data Sharing
 
@@ -60,20 +81,32 @@ We do not:
 - Sell your personal information.
 - Use your health or fitness data for advertising.
 - Upload your personal, health, fitness, location, or trip data to our servers.
-- Automatically share your locally stored data with third parties. Data may be shared with a third-party app or service only when you explicitly choose to do so through the device's sharing interface.
+
+Data may be shared with third parties in only two situations:
+
+- **Location lookup:** When you use location-based features, CarbonTracker sends location
+  coordinates to the Nominatim geocoding service to convert them into an address. This is the only
+  data CarbonTracker sends to a third party automatically, and it is governed by Nominatim's own
+  privacy practices.
+- **Exports you choose to share:** If you export your trip history, the file is shared with a
+  third-party app or service only when you explicitly choose to do so through the device's sharing
+  interface.
 
 ## Children's Privacy
 
-CarbonTracker is not intended for children under the age required by applicable law in their jurisdiction without parental or guardian consent.
+CarbonTracker is not intended for children under the age required by applicable law in their
+jurisdiction without parental or guardian consent.
 
 ## Changes to This Privacy Policy
 
-We may update this Privacy Policy when necessary to reflect changes to the App or applicable legal requirements.
+We may update this Privacy Policy when necessary to reflect changes to the App or applicable legal
+requirements.
 
 Any updates will be made available wherever this Privacy Policy is published.
 
 ## Contact Us
 
-If you have any questions or concerns about this Privacy Policy or CarbonTracker's privacy practices, please contact us at:
+If you have any questions or concerns about this Privacy Policy or CarbonTracker's privacy
+practices, please contact us at:
 
 **[contact@aossie.org](mailto:contact@aossie.org)**

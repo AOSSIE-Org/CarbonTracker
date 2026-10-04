@@ -62,18 +62,6 @@ class WatchService {
     }
   }
 
-  static Future<void> checkWatchConnection() async {
-    try {
-      final bool isConnected =
-          await _platform.invokeMethod('checkWearConnection') ?? false;
-      debugPrint('Watch connection status: $isConnected');
-    } on PlatformException catch (e) {
-      debugPrint('Failed to check watch connection: ${e.message}');
-    } on MissingPluginException catch (e) {
-      debugPrint('Missing plugin exception: ${e.message}');
-    }
-  }
-
   static Future<double?> getHeartRate() async {
     _heartRateCompleter = Completer<double?>();
     try {
