@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat/add-workflow
     paths:
       - 'VERSION'
 
@@ -11,10 +12,115 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    if: ${{ github.repository_owner == 'AOSSIE-Org' }}
+
+  # ---------- JOB 1: build the APK ----------
+
+  build_android:
+
+    name: Build Android APK
+
+#    if: ${{ github.repository_owner == 'AOSSIE-Org' }}
+
     runs-on: ubuntu-latest
-    
+
+    env:
+
+      JAVA_VERSION: 21.0.6
+
+      FLUTTER_VERSION: 3.44.0
+
+      APK_PATH: build/app/outputs/flutter-apk/app-release.apk
+
+      KEYSTORE_PATH: android/upload-keystore.jks
+
+      KEY_PROPS_PATH: android/key.properties
+
+    steps:
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      - name: Setup Java
+
+        uses: actions/setup-java@v4
+
+        with:
+
+          distribution: zulu
+
+          java-version: ${{ env.JAVA_VERSION }}
+
+
+
+      - name: Setup Android SDK
+
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Flutter
+
+        uses: subosito/flutter-action@v2
+
+        with:
+
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+
+
+      - name: Decode Android keystore
+
+        run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > ${{ env.KEYSTORE_PATH }}
+
+
+
+      - name: Decode Android key properties
+
+        run: echo "${{ secrets.ANDROID_KEY_PROPERTIES }}" | base64 --decode > ${{ env.KEY_PROPS_PATH }}
+
+
+      - name: Install Flutter dependencies
+
+        run: flutter pub get
+
+
+
+      - name: Run tests
+
+        run: flutter test
+
+      - name: Build Android APK
+
+        run: |
+
+          flutter build apk --release
+
+      - name: Verify APK file existence
+
+        run: ls -lh ${{ env.APK_PATH }}
+
+      - name: Upload APK artifact
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: apk-release
+
+          path: ${{ env.APK_PATH }}
+
+
+  # ---------- JOB 2: tag, publish release, attach APK ----------
+
+  release:
+
+    name: Tag and Publish Release
+
+    needs: build_android
+
+#    if: ${{ github.repository_owner == 'AOSSIE-Org' }}
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -62,19 +168,19 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const version = 'v${{ steps.get_version.outputs.version }}';
-            
+
             // Get all releases
             const { data: releases } = await github.rest.repos.listReleases({
               owner: context.repo.owner,
               repo: context.repo.repo,
             });
-            
+
             // Find the draft release
             const draftRelease = releases.find(release => release.draft === true);
-            
+
             if (draftRelease) {
               console.log(`Found draft release: ${draftRelease.name}`);
-              
+
               // Update and publish the draft release
               await github.rest.repos.updateRelease({
                 owner: context.repo.owner,
@@ -84,14 +190,14 @@ jobs:
                 name: version,
                 draft: false,
               });
-              
+
               console.log(`✓ Published draft release as ${version}`);
               core.setOutput('released', 'true');
             } else {
               console.log('⚠️ No draft release found. Please ensure release-drafter has created a draft release first.');
               core.setOutput('released', 'false');
               core.setFailed('No draft release found to publish');
-              
+
               //Uncomment below to auto-create release if no draft exists but also check release-drafter config first(why not working)
               // await github.rest.repos.createRelease({
               //   owner: context.repo.owner,
@@ -104,7 +210,36 @@ jobs:
               // });
             }
 
+
+      - name: Download APK artifact
+
+        if: steps.publish_release.outputs.released == 'true'
+
+        uses: actions/download-artifact@v4
+
+        with:
+
+          name: apk-release
+
+          path: apk
+
+
+      - name: Attach APK to release
+
+        if: steps.publish_release.outputs.released == 'true'
+
+        env:
+
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+        run: |
+          gh release upload "v${{ steps.get_version.outputs.version }}" \
+          apk/app-release.apk --clobber --repo "${{ github.repository }}"
+
       - name: Release Summary
+
+        if: always()
+
         run: |
           echo "### Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
