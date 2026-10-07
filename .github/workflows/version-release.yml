@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - feat/add-workflow
+      - master
     paths:
       - 'VERSION'
 
@@ -19,7 +19,7 @@ jobs:
 
     name: Build Android APK
 
-#    if: ${{ github.repository_owner == 'AOSSIE-Org' }}
+    if: ${{ github.repository_owner == 'AOSSIE-Org' }}
 
     runs-on: ubuntu-latest
 
@@ -112,7 +112,7 @@ jobs:
 
     needs: build_android
 
-#    if: ${{ github.repository_owner == 'AOSSIE-Org' }}
+    if: ${{ github.repository_owner == 'AOSSIE-Org' }}
     runs-on: ubuntu-latest
 
     steps:
