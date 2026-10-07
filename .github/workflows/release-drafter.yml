@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - feat/add-workflow
   pull_request:
     types: [closed]
 
