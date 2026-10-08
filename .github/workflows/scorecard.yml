@@ -14,7 +14,7 @@ on:
 
   push:
     # Branch-Protection check ONLY works on the default branch(Must match your actual default branch).
-    branches: ["dev"]
+    branches: [ "dev" ]
 
   workflow_dispatch:
 
@@ -35,8 +35,7 @@ jobs:
       security-events: write
       id-token: write
       actions: read
-      # Uncomment for PRIVATE repositories.
-      # contents: read
+      contents: read
 
     steps:
       - name: "Harden Runner"
@@ -61,6 +60,10 @@ jobs:
             rekor.sigstore.dev:443
             auth.docker.io:443
             api.scorecard.dev:443
+            results-receiver.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+
+
 
       - name: "Checkout code"
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1

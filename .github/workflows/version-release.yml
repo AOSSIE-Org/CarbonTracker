@@ -8,9 +8,6 @@ on:
     paths:
       - 'VERSION'
 
-permissions:
-  contents: write
-
 jobs:
 
   # ---------- JOB 1: build the APK ----------
@@ -21,96 +18,81 @@ jobs:
 
     if: ${{ github.repository_owner == 'AOSSIE-Org' }}
 
+    permissions:
+      contents: read
+
     runs-on: ubuntu-latest
 
     env:
 
       JAVA_VERSION: 21.0.6
-
       FLUTTER_VERSION: 3.44.0
-
       APK_PATH: build/app/outputs/flutter-apk/app-release.apk
-
       KEYSTORE_PATH: android/upload-keystore.jks
-
       KEY_PROPS_PATH: android/key.properties
 
     steps:
 
       - name: Checkout repository
-
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
 
       - name: Setup Java
-
         uses: actions/setup-java@v4
-
         with:
-
           distribution: zulu
-
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Setup Flutter
-
         uses: subosito/flutter-action@v2
-
         with:
-
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
 
 
       - name: Decode Android keystore
-
         run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > ${{ env.KEYSTORE_PATH }}
 
 
 
       - name: Decode Android key properties
-
         run: echo "${{ secrets.ANDROID_KEY_PROPERTIES }}" | base64 --decode > ${{ env.KEY_PROPS_PATH }}
 
 
       - name: Install Flutter dependencies
-
         run: flutter pub get
 
 
 
       - name: Run tests
-
         run: flutter test
 
       - name: Build Android APK
-
         run: |
 
-          flutter build apk --release
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          flutter build apk --release --build-name="$VERSION"
 
       - name: Verify APK file existence
-
         run: ls -lh ${{ env.APK_PATH }}
 
       - name: Upload APK artifact
-
         uses: actions/upload-artifact@v4
-
         with:
-
           name: apk-release
-
           path: ${{ env.APK_PATH }}
 
 
-  # ---------- JOB 2: tag, publish release, attach APK ----------
+  # ---------- JOB 2: tag, attach APK, publish release ----------
 
   release:
 
     name: Tag and Publish Release
-
     needs: build_android
+    permissions:
+      contents: write
 
     if: ${{ github.repository_owner == 'AOSSIE-Org' }}
     runs-on: ubuntu-latest
@@ -155,8 +137,9 @@ jobs:
           git push origin "v$VERSION"
           echo "✓ Created and pushed tag v$VERSION"
 
-      - name: Find and Publish Draft Release
-        id: publish_release
+
+      - name: Find Draft Release
+        id: find_release
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -172,68 +155,58 @@ jobs:
             // Find the draft release
             const draftRelease = releases.find(release => release.draft === true);
 
-            if (draftRelease) {
-              console.log(`Found draft release: ${draftRelease.name}`);
-
-              // Update and publish the draft release
-              await github.rest.repos.updateRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: draftRelease.id,
-                tag_name: version,
-                name: version,
-                draft: false,
-              });
-
-              console.log(`✓ Published draft release as ${version}`);
-              core.setOutput('released', 'true');
-            } else {
-              console.log('⚠️ No draft release found. Please ensure release-drafter has created a draft release first.');
-              core.setOutput('released', 'false');
-              core.setFailed('No draft release found to publish');
-
-              //Uncomment below to auto-create release if no draft exists but also check release-drafter config first(why not working)
-              // await github.rest.repos.createRelease({
-              //   owner: context.repo.owner,
-              //   repo: context.repo.repo,
-              //   tag_name: version,
-              //   name: version,
-              //   body: `## Release ${version}\n\nThis release was automatically created when the VERSION file was updated.`,
-              //   draft: false,
-              //   prerelease: false,
-              // });
+            if (!draftRelease) {
+              core.setFailed('No draft release found. Please ensure release-drafter has created a draft release first.');
+              return;
             }
 
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: draftRelease.id,
+              tag_name: version,
+              name: version,
+            });
+
+            core.setOutput('release_id', draftRelease.id);
 
       - name: Download APK artifact
-
-        if: steps.publish_release.outputs.released == 'true'
-
         uses: actions/download-artifact@v4
-
         with:
-
           name: apk-release
-
           path: apk
 
-
       - name: Attach APK to release
-
-        if: steps.publish_release.outputs.released == 'true'
-
         env:
-
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
         run: |
           gh release upload "v${{ steps.get_version.outputs.version }}" \
           apk/app-release.apk --clobber --repo "${{ github.repository }}"
 
+      - name: Publish Draft Release
+        id: publish_release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const version = 'v${{ steps.get_version.outputs.version }}';
+            const releaseId = '${{ steps.find_release.outputs.release_id }}';
+
+            // Update and publish the draft release
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: releaseId,
+              tag_name: version,
+              name: version,
+              draft: false,
+            });
+
+            console.log(`✓ Published draft release as ${version}`);
+            core.setOutput('released', 'true');
+
       - name: Release Summary
-
         if: always()
-
         run: |
           echo "### Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
