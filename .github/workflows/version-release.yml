@@ -144,8 +144,21 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Check if release already published
+        id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.get_version.outputs.version }}"
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Release $TAG is already published. Nothing to do."
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create and push tag
-        if: steps.check_tag.outputs.exists == 'false'
+        if: steps.check_tag.outputs.exists == 'false' && steps.check_release.outputs.published != 'true'
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           git config user.name "github-actions[bot]"
@@ -158,6 +171,7 @@ jobs:
       - name: Find Draft Release
         id: find_release
         uses: actions/github-script@v7
+        if: steps.check_release.outputs.published != 'true'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -189,6 +203,7 @@ jobs:
 
       - name: Download APK artifact
         uses: actions/download-artifact@v4
+        if: steps.check_release.outputs.published != 'true'
         with:
           name: apk-release
           path: apk
@@ -196,6 +211,7 @@ jobs:
       - name: Attach APK to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.check_release.outputs.published != 'true'
         run: |
           gh release upload "v${{ steps.get_version.outputs.version }}" \
           apk/app-release.apk --clobber --repo "${{ github.repository }}"
@@ -203,6 +219,7 @@ jobs:
       - name: Publish Draft Release
         id: publish_release
         uses: actions/github-script@v7
+        if: steps.check_release.outputs.published != 'true'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -228,15 +245,10 @@ jobs:
           echo "### Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** v${{ steps.get_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag Created:** ✓" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.publish_release.outputs.released }}" = "true" ]; then
-            echo "- **GitHub Release:** ✓" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check_release.outputs.published }}" = "true" ]; then
+            echo "- **Status:** Already published, nothing to do" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.publish_release.outputs.released }}" = "true" ]; then
+            echo "- **Status:** Released ✓" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- **GitHub Release:** ✗ (no draft found)" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.publish_release.outputs.released }}" = "true" ]; then
-            echo "Release completed successfully!" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Release failed - no draft release was found to publish" >> $GITHUB_STEP_SUMMARY
+            echo "- **Status:** ✗ Release did not complete, check the failed step above" >> $GITHUB_STEP_SUMMARY
           fi
