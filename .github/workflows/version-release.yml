@@ -101,6 +101,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Read VERSION file
@@ -120,15 +121,31 @@ jobs:
           echo "✓ Version format is valid: $VERSION"
 
       - name: Check if tag already exists
+        id: check_tag
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
-          if git show-ref --tags --verify --quiet "refs/tags/v$VERSION"; then
-            echo "Error: Tag v$VERSION already exists"
-            exit 1
+          TAG="v$VERSION"
+
+          git fetch origin "refs/tags/$TAG:refs/tags/$TAG" 2>/dev/null || true
+
+          if git show-ref --tags --verify --quiet "refs/tags/$TAG"; then
+            TAG_COMMIT=$(git rev-parse "$TAG^{commit}")
+            CURRENT_COMMIT=$(git rev-parse HEAD)
+
+            if [ "$TAG_COMMIT" = "$CURRENT_COMMIT" ]; then
+              echo "Tag $TAG already points to this commit. Continuing retry."
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "::error::Tag $TAG already exists but points to a different commit."
+              exit 1
+            fi
+          else
+            echo "Tag $TAG does not exist yet."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-          echo "✓ Tag v$VERSION does not exist yet"
 
       - name: Create and push tag
+        if: steps.check_tag.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           git config user.name "github-actions[bot]"
