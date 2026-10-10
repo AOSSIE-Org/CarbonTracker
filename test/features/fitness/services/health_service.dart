@@ -134,10 +134,12 @@ class HealthService implements IHealthService {
     double distanceSum = 0.0;
     double caloriesSum = 0.0;
     double? heartRate;
-    double bloodPressureSystolic = 0.0;
-    double bloodPressureDiastolic = 0.0;
+    int? systolicCount;
+    int? diastolicCount;
     int floorsClimbed = 0;
     DateTime? latestHeartRateTime;
+    final systolicReadings = <({int value, DateTime time})>[];
+    final diastolicReadings = <({int value, DateTime time})>[];
 
     for (final point in healthDataList) {
       HealthValue value = point.value;
@@ -160,13 +162,37 @@ class HealthService implements IHealthService {
             heartRate = value.numericValue.toDouble();
           }
         } else if (point.type == HealthDataType.BLOOD_PRESSURE_SYSTOLIC) {
-          // to be implemented
-        }
-        if (point.type == HealthDataType.BLOOD_PRESSURE_DIASTOLIC) {
-          // to be implemented based on watch connection
+          systolicReadings.add((
+            value: value.numericValue.toInt(),
+            time: point.dateTo,
+          ));
+        } else if (point.type == HealthDataType.BLOOD_PRESSURE_DIASTOLIC) {
+          diastolicReadings.add((
+            value: value.numericValue.toInt(),
+            time: point.dateTo,
+          ));
         }
       }
     }
+
+    if (systolicReadings.isNotEmpty && diastolicReadings.isNotEmpty) {
+      systolicReadings.sort((a, b) => b.time.compareTo(a.time));
+      diastolicReadings.sort((a, b) => b.time.compareTo(a.time));
+
+      for (final s in systolicReadings) {
+        for (final d in diastolicReadings) {
+          if (s.time == d.time) {
+            systolicCount = s.value;
+            diastolicCount = d.value;
+            break;
+          }
+        }
+        if (systolicCount != null && diastolicCount != null) {
+          break;
+        }
+      }
+    }
+
     heartRate ??= watchHeartRateFallback;
 
     return FitnessMetrics(
@@ -175,8 +201,8 @@ class HealthService implements IHealthService {
       caloriesBurned: caloriesSum,
       floorsClimbed: floorsClimbed,
       heartRate: heartRate,
-      bloodPressureSystolic: bloodPressureSystolic,
-      bloodPressureDiastolic: bloodPressureDiastolic,
+      bloodPressureSystolic: systolicCount,
+      bloodPressureDiastolic: diastolicCount,
     ).getStats();
   }
 

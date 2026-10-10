@@ -154,7 +154,7 @@ void main() {
         steps: 0,
       );
 
-      expect(statValue(stats, 'Blood Pressure'), 'N/A');
+      expect(statValue(stats, 'Blood Pressure'), '120/80');
     });
   });
 }

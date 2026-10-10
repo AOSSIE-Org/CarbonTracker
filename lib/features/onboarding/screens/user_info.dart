@@ -411,55 +411,69 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
         Column(
           children: trackingOptions.map((option) {
             final isSelected = _selectedTracking == option['value'];
+            final isEnabled = option['value'] == TrackingOption.refresh;
             return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedTracking = option['value'] as TrackingOption;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 15),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 22,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.selectedOptionColor
-                      : AppColors.optionBackgroundColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.focusedColor
-                        : AppColors.unselectedBorderColor,
+              onTap: isEnabled
+                  ? () {
+                      setState(() {
+                        _selectedTracking = option['value'] as TrackingOption;
+                      });
+                    }
+                  : null,
+              child: Opacity(
+                opacity: isEnabled ? 1.0 : 0.5,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 15),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 22,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      option['icon'] as IconData,
-                      size: 22,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.selectedOptionColor
+                        : AppColors.optionBackgroundColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
                       color: isSelected
                           ? AppColors.focusedColor
-                          : AppColors.textDark,
+                          : AppColors.unselectedBorderColor,
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      option['label'] as String,
-                      style: TextStyle(
-                        fontSize: 15,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        option['icon'] as IconData,
+                        size: 22,
                         color: isSelected
                             ? AppColors.focusedColor
                             : AppColors.textDark,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Text(
+                        option['label'] as String,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: isSelected
+                              ? AppColors.focusedColor
+                              : AppColors.textDark,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
           }).toList(),
+        ),
+        Text(
+          'Currently, only the "Refresh" tracking mode is available. Other modes will be added in future updates.',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.subtitleText,
+            height: 1.5,
+          ),
         ),
       ],
     );
