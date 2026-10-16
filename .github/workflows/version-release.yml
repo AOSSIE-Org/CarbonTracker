@@ -4,21 +4,104 @@ on:
   push:
     branches:
       - main
+      - master
     paths:
       - 'VERSION'
 
-permissions:
-  contents: write
-
 jobs:
+
+  # ---------- JOB 1: build the APK ----------
+
+  build_android:
+
+    name: Build Android APK
+
+    if: ${{ github.repository_owner == 'AOSSIE-Org' }}
+
+    permissions:
+      contents: read
+
+    runs-on: ubuntu-latest
+
+    env:
+
+      JAVA_VERSION: 21.0.6
+      FLUTTER_VERSION: 3.44.0
+      APK_PATH: build/app/outputs/flutter-apk/app-release.apk
+      KEYSTORE_PATH: android/upload-keystore.jks
+      KEY_PROPS_PATH: android/key.properties
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+
+
+      - name: Decode Android keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > ${{ env.KEYSTORE_PATH }}
+
+
+
+      - name: Decode Android key properties
+        run: echo "${{ secrets.ANDROID_KEY_PROPERTIES }}" | base64 --decode > ${{ env.KEY_PROPS_PATH }}
+
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build Android APK
+        run: |
+
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          flutter build apk --release --build-name="$VERSION"
+
+      - name: Verify APK file existence
+        run: ls -lh ${{ env.APK_PATH }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-release
+          path: ${{ env.APK_PATH }}
+
+
+  # ---------- JOB 2: tag, attach APK, publish release ----------
+
   release:
+
+    name: Tag and Publish Release
+    needs: build_android
+    permissions:
+      contents: write
+
     if: ${{ github.repository_owner == 'AOSSIE-Org' }}
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Read VERSION file
@@ -38,15 +121,44 @@ jobs:
           echo "✓ Version format is valid: $VERSION"
 
       - name: Check if tag already exists
+        id: check_tag
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
-          if git show-ref --tags --verify --quiet "refs/tags/v$VERSION"; then
-            echo "Error: Tag v$VERSION already exists"
-            exit 1
+          TAG="v$VERSION"
+
+          git fetch origin "refs/tags/$TAG:refs/tags/$TAG" 2>/dev/null || true
+
+          if git show-ref --tags --verify --quiet "refs/tags/$TAG"; then
+            TAG_COMMIT=$(git rev-parse "$TAG^{commit}")
+            CURRENT_COMMIT=$(git rev-parse HEAD)
+
+            if [ "$TAG_COMMIT" = "$CURRENT_COMMIT" ]; then
+              echo "Tag $TAG already points to this commit. Continuing retry."
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "::error::Tag $TAG already exists but points to a different commit."
+              exit 1
+            fi
+          else
+            echo "Tag $TAG does not exist yet."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-          echo "✓ Tag v$VERSION does not exist yet"
+
+      - name: Check if release already published
+        id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.get_version.outputs.version }}"
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Release $TAG is already published. Nothing to do."
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create and push tag
+        if: steps.check_tag.outputs.exists == 'false' && steps.check_release.outputs.published != 'true'
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
           git config user.name "github-actions[bot]"
@@ -55,69 +167,88 @@ jobs:
           git push origin "v$VERSION"
           echo "✓ Created and pushed tag v$VERSION"
 
-      - name: Find and Publish Draft Release
-        id: publish_release
+
+      - name: Find Draft Release
+        id: find_release
         uses: actions/github-script@v7
+        if: steps.check_release.outputs.published != 'true'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const version = 'v${{ steps.get_version.outputs.version }}';
-            
+
             // Get all releases
             const { data: releases } = await github.rest.repos.listReleases({
               owner: context.repo.owner,
               repo: context.repo.repo,
             });
-            
+
             // Find the draft release
             const draftRelease = releases.find(release => release.draft === true);
-            
-            if (draftRelease) {
-              console.log(`Found draft release: ${draftRelease.name}`);
-              
-              // Update and publish the draft release
-              await github.rest.repos.updateRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: draftRelease.id,
-                tag_name: version,
-                name: version,
-                draft: false,
-              });
-              
-              console.log(`✓ Published draft release as ${version}`);
-              core.setOutput('released', 'true');
-            } else {
-              console.log('⚠️ No draft release found. Please ensure release-drafter has created a draft release first.');
-              core.setOutput('released', 'false');
-              core.setFailed('No draft release found to publish');
-              
-              //Uncomment below to auto-create release if no draft exists but also check release-drafter config first(why not working)
-              // await github.rest.repos.createRelease({
-              //   owner: context.repo.owner,
-              //   repo: context.repo.repo,
-              //   tag_name: version,
-              //   name: version,
-              //   body: `## Release ${version}\n\nThis release was automatically created when the VERSION file was updated.`,
-              //   draft: false,
-              //   prerelease: false,
-              // });
+
+            if (!draftRelease) {
+              core.setFailed('No draft release found. Please ensure release-drafter has created a draft release first.');
+              return;
             }
 
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: draftRelease.id,
+              tag_name: version,
+              name: version,
+            });
+
+            core.setOutput('release_id', draftRelease.id);
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        if: steps.check_release.outputs.published != 'true'
+        with:
+          name: apk-release
+          path: apk
+
+      - name: Attach APK to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.check_release.outputs.published != 'true'
+        run: |
+          gh release upload "v${{ steps.get_version.outputs.version }}" \
+          apk/app-release.apk --clobber --repo "${{ github.repository }}"
+
+      - name: Publish Draft Release
+        id: publish_release
+        uses: actions/github-script@v7
+        if: steps.check_release.outputs.published != 'true'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const version = 'v${{ steps.get_version.outputs.version }}';
+            const releaseId = '${{ steps.find_release.outputs.release_id }}';
+
+            // Update and publish the draft release
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: releaseId,
+              tag_name: version,
+              name: version,
+              draft: false,
+            });
+
+            console.log(`✓ Published draft release as ${version}`);
+            core.setOutput('released', 'true');
+
       - name: Release Summary
+        if: always()
         run: |
           echo "### Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** v${{ steps.get_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag Created:** ✓" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.publish_release.outputs.released }}" = "true" ]; then
-            echo "- **GitHub Release:** ✓" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check_release.outputs.published }}" = "true" ]; then
+            echo "- **Status:** Already published, nothing to do" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.publish_release.outputs.released }}" = "true" ]; then
+            echo "- **Status:** Released ✓" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- **GitHub Release:** ✗ (no draft found)" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.publish_release.outputs.released }}" = "true" ]; then
-            echo "Release completed successfully!" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Release failed - no draft release was found to publish" >> $GITHUB_STEP_SUMMARY
+            echo "- **Status:** ✗ Release did not complete, check the failed step above" >> $GITHUB_STEP_SUMMARY
           fi
