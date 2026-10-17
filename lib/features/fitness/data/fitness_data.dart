@@ -26,8 +26,8 @@ class FitnessMetrics {
   final double caloriesBurned;
   final int floorsClimbed;
   final double? heartRate;
-  final double bloodPressureSystolic;
-  final double bloodPressureDiastolic;
+  final int? bloodPressureSystolic;
+  final int? bloodPressureDiastolic;
 
   FitnessMetrics({
     required this.steps,
@@ -86,7 +86,7 @@ class FitnessMetrics {
         iconColor: const Color(0xFF059669),
         iconBg: const Color(0xFFECFDF5),
         label: 'Blood Pressure',
-        value: bloodPressureSystolic != 0 && bloodPressureDiastolic != 0
+        value: bloodPressureSystolic != null && bloodPressureDiastolic != null
             ? '$bloodPressureSystolic/$bloodPressureDiastolic'
             : 'N/A',
         unit: 'mmHg',

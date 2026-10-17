@@ -1,4 +1,6 @@
 import 'package:carbon_tracker/core/config/app_constants.dart';
+import 'package:carbon_tracker/core/widgets/modal.dart';
+import 'package:carbon_tracker/features/carbon/data/carbon_modal_data.dart';
 import 'package:carbon_tracker/features/carbon/providers/summary_provider.dart';
 import 'package:carbon_tracker/features/carbon/widgets/carbon_chart.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +42,25 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  child: Text(
+                    "Know more  ›",
+                    style: TextStyle(
+                      color: AppColors.secondaryColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () => showInfoModal(
+                    context,
+                    carbonModalTitle,
+                    carbonModalData,
+                    'Close',
+                  ),
+                ),
+              ),
             ],
           ),
         ),
