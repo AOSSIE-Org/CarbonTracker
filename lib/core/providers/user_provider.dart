@@ -30,7 +30,7 @@ class UserNotifier extends Notifier<User?> {
   }
 
   Future<void> deleteUser() async {
-    await _databaseHelper.deleteData('user', 1);
+    await _databaseHelper.resetDB();
     state = null;
   }
 }

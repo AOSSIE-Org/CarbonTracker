@@ -1,7 +1,7 @@
+import 'package:carbon_tracker/features/fitness/services/health_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:health/health.dart';
 import '../helpers/helpers.dart';
-import 'health_service.dart';
 
 void main() {
   group('HealthService.aggregateFitnessMetrics', () {

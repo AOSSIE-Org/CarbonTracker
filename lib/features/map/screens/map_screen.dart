@@ -18,14 +18,14 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
-
-typedef MapUiBuilder = Widget Function({
-required double currentLat,
-required double currentLon,
-required double destinationLat,
-required double destinationLon,
-required RoadType type,
-});
+typedef MapUiBuilder =
+    Widget Function({
+      required double currentLat,
+      required double currentLon,
+      required double destinationLat,
+      required double destinationLon,
+      required RoadType type,
+    });
 
 class MapScreen extends ConsumerStatefulWidget {
   final bool isActive;
@@ -40,7 +40,7 @@ class MapScreen extends ConsumerStatefulWidget {
     TripRepository? tripRepo,
     MapUiBuilder? mapUiBuilder,
   }) : tripRepo = tripRepo ?? TripRepository(),
-        mapUiBuilder = mapUiBuilder ?? MapUI.new;
+       mapUiBuilder = mapUiBuilder ?? MapUI.new;
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
@@ -253,17 +253,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     Positioned.fill(
                       child:
                           _startMapRoute &&
-                              _currentLocationQuery != null &&
-                              _destinationLocationQuery != null
-                          ?  widget.mapUiBuilder(
-                                    currentLat: _currentLocationQuery!.lat!,
-                                    currentLon: _currentLocationQuery!.lon!,
-                                    destinationLat:
-                                        _destinationLocationQuery!.lat!,
-                                    destinationLon:
-                                        _destinationLocationQuery!.lon!,
-                                    type: getRoadType(_selectedMode!),
-                                  )
+                              _currentLocationQuery?.lat != null &&
+                              _currentLocationQuery?.lon != null &&
+                              _destinationLocationQuery?.lat != null &&
+                              _destinationLocationQuery?.lon != null
+                          ? widget.mapUiBuilder(
+                              currentLat: _currentLocationQuery!.lat!,
+                              currentLon: _currentLocationQuery!.lon!,
+                              destinationLat: _destinationLocationQuery!.lat!,
+                              destinationLon: _destinationLocationQuery!.lon!,
+                              type: getRoadType(_selectedMode!),
+                            )
                           : Opacity(
                               opacity: 0.7,
                               child: Image.asset(
@@ -451,20 +451,34 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                           TransportModes.values.length,
                                           (i) => ElevatedButton(
                                             onPressed: () {
+                                              final current =
+                                                  _currentLocationQuery;
+
+                                              final destination =
+                                                  _destinationLocationQuery;
+
+                                              if (current?.lat == null ||
+                                                  current?.lon == null ||
+                                                  destination?.lat == null ||
+                                                  destination?.lon == null) {
+                                                setState(() {
+                                                  _errMessage =
+                                                      "Unable to calculate distance for these locations.";
+                                                });
+
+                                                return;
+                                              }
+
                                               double distanceKm = widget.mapOb
                                                   .calculateDistanceInKm(
                                                     startLatitude:
-                                                        _currentLocationQuery!
-                                                            .lat!,
+                                                        current!.lat!,
                                                     startLongitude:
-                                                        _currentLocationQuery!
-                                                            .lon!,
+                                                        current.lon!,
                                                     endLatitude:
-                                                        _destinationLocationQuery!
-                                                            .lat!,
+                                                        destination!.lat!,
                                                     endLongitude:
-                                                        _destinationLocationQuery!
-                                                            .lon!,
+                                                        destination.lon!,
                                                   );
 
                                               final mode =

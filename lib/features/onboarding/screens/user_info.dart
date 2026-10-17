@@ -6,8 +6,8 @@ import 'package:carbon_tracker/core/widgets/loader.dart';
 import 'package:carbon_tracker/database/models/user.dart';
 import 'package:carbon_tracker/features/onboarding/data/tracking_modes_info.dart';
 import 'package:carbon_tracker/features/onboarding/providers/matchmaking_provider.dart';
-import 'package:carbon_tracker/features/onboarding/providers/permissions_provider.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
+import 'package:carbon_tracker/features/onboarding/providers/permissions_provider.dart';
 import 'package:carbon_tracker/features/onboarding/widgets/watch_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -112,7 +112,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
       _isLoading = true;
     });
 
-    result = result = await ref.read(matchmakingRunnerProvider)();
+    result = await ref.read(matchmakingRunnerProvider)();
 
     if (mounted) {
       setState(() {
@@ -526,7 +526,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: Text(
-            'Used only for carbon footprint calculation (must be between 1 and 500 kg)',
+            'Your weight is stored locally on your device. We never upload your personal data. (Weight must be between 1 and 500 kg)',
             style: TextStyle(fontSize: 12, color: AppColors.subtitleText),
           ),
         ),
