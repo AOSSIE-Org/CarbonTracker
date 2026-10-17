@@ -18,6 +18,10 @@ class MatchmakingService {
         case "cancelled":
         case "not_available":
         case "not_possible":
+        case "granted":
+        case "partial":
+        case "denied":
+        case "unavailable":
           return "proceed";
 
         default:

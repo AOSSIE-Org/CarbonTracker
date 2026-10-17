@@ -25,8 +25,6 @@ class HealthService implements IHealthService {
 
   static final _types = [
     HealthDataType.STEPS,
-    HealthDataType.BLOOD_PRESSURE_DIASTOLIC,
-    HealthDataType.BLOOD_PRESSURE_SYSTOLIC,
     HealthDataType.HEART_RATE,
     HealthDataType.FLIGHTS_CLIMBED,
     Platform.isIOS

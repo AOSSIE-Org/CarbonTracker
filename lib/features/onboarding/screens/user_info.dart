@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:carbon_tracker/core/config/route_constants.dart';
 import 'package:carbon_tracker/core/data/tracking_options.dart';
 import 'package:carbon_tracker/core/data/transport_preferences.dart';
@@ -7,10 +6,11 @@ import 'package:carbon_tracker/database/models/user.dart';
 import 'package:carbon_tracker/features/onboarding/data/tracking_modes_info.dart';
 import 'package:carbon_tracker/features/onboarding/providers/matchmaking_provider.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
-import 'package:carbon_tracker/features/onboarding/providers/permissions_provider.dart';
 import 'package:carbon_tracker/features/onboarding/widgets/watch_modal.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:carbon_tracker/features/fitness/providers/health_permission_provider.dart';
 import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/features/onboarding/data/privacy_policy_info.dart'
     as privacy;
@@ -124,51 +124,84 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
   }
 
   Future<void> handleContinue() async {
-    /* Matchmaking is only implemented on Android for now, so we show the modal
-       before navigating to the main screen. On iOS, we skip this step and go directly to the main screen. */
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
+    final permissionService = ref.read(healthPermissionServiceProvider);
 
-    if (Platform.isAndroid) {
-      // The matchmaking process already asks for permissions on Android
-      String res = await showMatchmakingModal();
+    if (isAndroid) {
+      try {
+        final result = await permissionService.requestPermissions();
+        ref.read(healthPermissionStatusProvider.notifier).update(result);
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (res != "proceed") {
+        if (result.isGranted) {
+          await showWatchModal(context);
+        } else if (result.isUnavailable) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Health Connect is unavailable. Please install Health Connect to get full functionality.',
+              ),
+              action: SnackBarAction(
+                label: 'Install',
+                onPressed: () {
+                  permissionService.openHealthConnectPlayStore();
+                },
+              ),
+            ),
+          );
+        } else {
+          // Denied or partially granted
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Health permission denied, please grant permission to get full functionality',
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint("Error checking health permissions: $e");
+        if (!mounted) return;
         ScaffoldMessenger.of(context).clearSnackBars();
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error during matchmaking: $res. Please try again.'),
+            content: Text('Error during matchmaking: $e. Please try again.'),
           ),
         );
         return;
       }
-
-      await showWatchModal(context);
     }
 
-    if (Platform.isIOS) {
-      bool permissionGranted = await ref.read(healthPermissionProvider)();
+    if (isIOS) {
+      try {
+        final result = await permissionService.requestPermissions();
+        ref.read(healthPermissionStatusProvider.notifier).update(result);
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      debugPrint("HealthKit permission granted: $permissionGranted");
-
-      if (permissionGranted) {
-        debugPrint("HealthKit permissions granted.");
-      } else {
-        debugPrint(" HealthKit permissions denied.");
-
-        ScaffoldMessenger.of(context).clearSnackBars();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Permissions denied. Please enable HealthKit permissions in your device settings to continue.',
+        if (!result.isGranted) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Health permission denied, please grant permission to get full functionality',
+              ),
             ),
+          );
+        }
+      } catch (e) {
+        debugPrint("Error checking iOS HealthKit permissions: $e");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error checking permissions: $e. Please try again.'),
           ),
         );
-
         return;
       }
     }

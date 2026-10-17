@@ -1,6 +1,9 @@
 package org.aossie.carbontracker
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.health.connect.client.ExperimentalMatchmakingApi
@@ -15,7 +18,6 @@ import androidx.health.connect.client.records.*
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.wearable.Wearable
 import io.flutter.embedding.android.FlutterFragmentActivity
-
 
 import kotlinx.coroutines.launch
 import org.aossie.carbontracker.channels.WearChannel
@@ -35,64 +37,51 @@ class MainActivity : FlutterFragmentActivity() {
     private lateinit var client: HealthConnectClient
 
     private var pendingResult: MethodChannel.Result? = null
+    private var lastGrantedPermissions: List<String> = emptyList()
 
+    // Requested permissions only for records the app actually uses (removed BloodPressureRecord)
     private val permissions = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
         HealthPermission.getReadPermission(DistanceRecord::class),
         HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),
-        HealthPermission.getReadPermission(BloodPressureRecord::class),
         HealthPermission.getReadPermission(FloorsClimbedRecord::class),
     )
 
     // Launcher for the matchmaking flow. This will be used to start the matchmaking activity and handle its result.
-
     private val matchmakingLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-
-            pendingResult?.success(
-                mapOf(
-                    "status" to "completed", "message" to "matchmaking flow completed successfully."
-                )
+        val mmStatus = if (result.resultCode == Activity.RESULT_OK) "completed" else "cancelled"
+        pendingResult?.success(
+            mapOf(
+                "status" to "granted",
+                "message" to "Matchmaking flow $mmStatus.",
+                "grantedPermissions" to lastGrantedPermissions,
+                "matchmakingStatus" to mmStatus
             )
-        } else {
-
-            pendingResult?.success(
-                mapOf(
-                    "status" to "cancelled", "message" to "matchmaking flow was canceled."
-                )
-            )
-        }
-
+        )
         pendingResult = null
     }
 
     // Request permissions for Health Connect.
-
     @OptIn(ExperimentalMatchmakingApi::class)
     private val requestPermissionsLauncher = registerForActivityResult(
         PermissionController.createRequestPermissionResultContract()
     ) { grantedPermissions ->
+        Log.d("HC", "Permission callback fired: $grantedPermissions")
 
-        Log.d("HC", "Permission callback fired")
+        val grantedList = grantedPermissions.map { it.toString() }
+        lastGrantedPermissions = grantedList
 
         if (grantedPermissions.containsAll(permissions)) {
-
-            // All required permissions were granted, proceed with matchmaking.
-
-            Log.d("HC", "Granted permissions: $grantedPermissions")
-
+            // All required permissions were granted, proceed with matchmaking if available.
+            Log.d("HC", "Granted all permissions: $grantedPermissions")
 
             if (client.features.getFeatureStatus(
                     HealthConnectFeatures.FEATURE_MATCHMAKING
                 ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
             ) {
-                // Feature is available
-
-                Log.d("HC", "Granted permissions: $grantedPermissions")
-
                 lifecycleScope.launch {
                     try {
                         performMatchmaking()
@@ -103,33 +92,42 @@ class MainActivity : FlutterFragmentActivity() {
                         pendingResult = null
                     }
                 }
-
             } else {
-
                 Log.d("HC", "Matchmaking feature is unavailable")
-
                 pendingResult?.success(
                     mapOf(
-                        "status" to "not_available",
-                        "message" to "Matchmaking is not available on this device"
+                        "status" to "granted",
+                        "message" to "Matchmaking is not available on this device",
+                        "grantedPermissions" to grantedList,
+                        "matchmakingStatus" to "not_available"
                     )
                 )
-
                 pendingResult = null
-
             }
-
-        } else {
-            // Handle the case where permissions were not granted.
-            pendingResult?.error(
-                "PERMISSION_DENIED", "Required permissions were not granted", null
+        } else if (grantedPermissions.isNotEmpty()) {
+            // Partial permissions granted - non fatal!
+            Log.d("HC", "Permissions partially granted: $grantedPermissions")
+            pendingResult?.success(
+                mapOf(
+                    "status" to "partial",
+                    "message" to "Health permissions partially granted",
+                    "grantedPermissions" to grantedList
+                )
             )
-
+            pendingResult = null
+        } else {
+            // All permissions denied - non fatal!
+            Log.d("HC", "Permissions denied")
+            pendingResult?.success(
+                mapOf(
+                    "status" to "denied",
+                    "message" to "Health permissions denied",
+                    "grantedPermissions" to emptyList<String>()
+                )
+            )
             pendingResult = null
         }
-
     }
-
 
     @OptIn(ExperimentalMatchmakingApi::class)
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -143,54 +141,151 @@ class MainActivity : FlutterFragmentActivity() {
         WearChannel.setMethodHandler(this)
         matchmakingChannel.setMethodCallHandler { call, result ->
 
-            pendingResult = result
+            when (call.method) {
+                "showMatchmakingModal" -> {
+                    pendingResult = result
 
-            if (call.method == "showMatchmakingModal") {
+                    val status = HealthConnectClient.getSdkStatus(this)
+                    Log.d("HC", "SDK Status = $status")
 
-                val status = HealthConnectClient.getSdkStatus(this)
+                    if (status != HealthConnectClient.SDK_AVAILABLE) {
+                        // Return structured unavailable result instead of throwing PlatformException
+                        result.success(
+                            mapOf(
+                                "status" to "unavailable",
+                                "message" to "Health Connect is unavailable on this device",
+                                "grantedPermissions" to emptyList<String>()
+                            )
+                        )
+                        pendingResult = null
+                        return@setMethodCallHandler
+                    }
 
-                Log.d("HC", "SDK Status = $status")
+                    client = HealthConnectClient.getOrCreate(this)
 
-                if (status != HealthConnectClient.SDK_AVAILABLE) {
-                    result.error(
-                        "HEALTH_CONNECT_UNAVAILABLE", "Health Connect is unavailable", null
-                    )
-                    return@setMethodCallHandler
-                }
-
-                client = HealthConnectClient.getOrCreate(this)
-
-
-                lifecycleScope.launch {
-
-                    val grantedPermissions = client.permissionController.getGrantedPermissions()
-
-                    if (!grantedPermissions.containsAll(permissions)) {
-                        requestPermissionsLauncher.launch(permissions)
-                        return@launch
-                    } else {
-
+                    lifecycleScope.launch {
                         try {
-                            performMatchmaking()
+                            val grantedPermissions = client.permissionController.getGrantedPermissions()
+                            lastGrantedPermissions = grantedPermissions.map { it.toString() }
+
+                            if (!grantedPermissions.containsAll(permissions)) {
+                                requestPermissionsLauncher.launch(permissions)
+                                return@launch
+                            } else {
+                                try {
+                                    performMatchmaking()
+                                } catch (e: Exception) {
+                                    pendingResult?.error(
+                                        "MATCHMAKING_ERROR", e.message, null
+                                    )
+                                    pendingResult = null
+                                }
+                            }
                         } catch (e: Exception) {
                             pendingResult?.error(
-                                "MATCHMAKING_ERROR", e.message, null
+                                "HEALTH_CONNECT_ERROR", e.message, null
                             )
                             pendingResult = null
                         }
-
+                    }
+                }
+                "getHealthPermissionStatus" -> {
+                    val status = HealthConnectClient.getSdkStatus(this)
+                    if (status != HealthConnectClient.SDK_AVAILABLE) {
+                        result.success(
+                            mapOf(
+                                "status" to "unavailable",
+                                "message" to "Health Connect is unavailable on this device",
+                                "grantedPermissions" to emptyList<String>()
+                            )
+                        )
+                        return@setMethodCallHandler
                     }
 
+                    client = HealthConnectClient.getOrCreate(this)
+                    lifecycleScope.launch {
+                        try {
+                            val granted = client.permissionController.getGrantedPermissions()
+                            val grantedList = granted.map { it.toString() }
+                            lastGrantedPermissions = grantedList
+                            val statusStr = when {
+                                granted.containsAll(permissions) -> "granted"
+                                granted.isNotEmpty() -> "partial"
+                                else -> "denied"
+                            }
+                            result.success(
+                                mapOf(
+                                    "status" to statusStr,
+                                    "message" to "Current health permission status",
+                                    "grantedPermissions" to grantedList
+                                )
+                            )
+                        } catch (e: Exception) {
+                            result.error("STATUS_CHECK_ERROR", e.message, null)
+                        }
+                    }
                 }
+                "requestHealthPermissions" -> {
+                    val status = HealthConnectClient.getSdkStatus(this)
+                    if (status != HealthConnectClient.SDK_AVAILABLE) {
+                        result.success(
+                            mapOf(
+                                "status" to "unavailable",
+                                "message" to "Health Connect is unavailable",
+                                "grantedPermissions" to emptyList<String>()
+                            )
+                        )
+                        return@setMethodCallHandler
+                    }
 
-            } else {
-                result.notImplemented()
+                    client = HealthConnectClient.getOrCreate(this)
+                    pendingResult = result
+                    requestPermissionsLauncher.launch(permissions)
+                }
+                "openHealthConnectPlayStore" -> {
+                    try {
+                        val uri = Uri.parse("market://details?id=com.google.android.apps.healthdata&url=healthconnect%3A%2F%2Fonboarding")
+                        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                            setPackage("com.android.vending")
+                        }
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        try {
+                            val webIntent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata")
+                            )
+                            startActivity(webIntent)
+                            result.success(true)
+                        } catch (e2: Exception) {
+                            result.error("PLAY_STORE_ERROR", e2.message, null)
+                        }
+                    }
+                }
+                "openHealthConnectSettings" -> {
+                    try {
+                        val intent = Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS")
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        try {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", packageName, null)
+                            }
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (e2: Exception) {
+                            result.error("SETTINGS_ERROR", e2.message, null)
+                        }
+                    }
+                }
+                else -> {
+                    result.notImplemented()
+                }
             }
         }
-
-
     }
-
 
     // Check if matchmaking is possible by checking if the user has granted any permissions for the specified record types.
     @OptIn(ExperimentalMatchmakingApi::class)
@@ -202,7 +297,6 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     // Launch the matchmaking flow using the HealthConnectClient.
-
     @OptIn(ExperimentalMatchmakingApi::class)
     private fun launchMatchmaking() {
         val request = MatchmakingRequest()
@@ -213,22 +307,20 @@ class MainActivity : FlutterFragmentActivity() {
 
     private suspend fun performMatchmaking() {
         if (checkMatchmakingPossible()) {
-
             Log.d("HC", "Launching matchmaking request")
-
             launchMatchmaking()
         } else {
-
             // Matchmaking is not possible on this device.
-
             Log.d(
                 "HC", "Matchmaking isn't possible. User may not have granted permissions."
             )
 
             pendingResult?.success(
                 mapOf(
-                    "status" to "not_possible",
-                    "message" to "Matchmaking isn't possible on this device."
+                    "status" to "granted",
+                    "message" to "Matchmaking isn't possible on this device.",
+                    "grantedPermissions" to lastGrantedPermissions,
+                    "matchmakingStatus" to "not_possible"
                 )
             )
 
