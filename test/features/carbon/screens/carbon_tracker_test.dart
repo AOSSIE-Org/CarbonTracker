@@ -67,9 +67,7 @@ void main() {
       await tester.pumpWidget(buildTestable(summary: null));
       await tester.pumpAndSettle();
 
-      await tester.tap(
-        find.byTooltip('More information about carbon footprint'),
-      );
+      await tester.tap(find.text('Know more  ›'));
       await tester.pumpAndSettle();
 
       expect(find.text(carbonModalTitle), findsOneWidget);
@@ -82,9 +80,7 @@ void main() {
       await tester.pumpWidget(buildTestable(summary: null));
       await tester.pumpAndSettle();
 
-      await tester.tap(
-        find.byTooltip('More information about carbon footprint'),
-      );
+      await tester.tap(find.text('Know more  ›'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.widgetWithText(TextButton, 'Close'));

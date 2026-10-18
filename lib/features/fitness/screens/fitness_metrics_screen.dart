@@ -260,6 +260,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
                           ),
                     const SizedBox(height: 20),
 
+                    if(!_isRefreshing)
                     GestureDetector(
                       onTap: () {
                         showInfoModal(
