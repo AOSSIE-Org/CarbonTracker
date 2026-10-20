@@ -5,7 +5,7 @@ class TrackingOptionTile extends StatelessWidget {
   final bool selected;
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final String type;
 
   const TrackingOptionTile({
@@ -19,40 +19,38 @@ class TrackingOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final enabled = onTap != null;
+
     return Expanded(
-      child: GestureDetector(
-        key: Key('$type-$label'),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.secondaryColor.withValues(alpha: 0.1)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
+      child: Opacity(
+        opacity: enabled ? 1.0 : 0.5,
+        child: GestureDetector(
+          key: Key('$type-$label'),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
               color: selected
-                  ? AppColors.secondaryColor
-                  : AppColors.greenBorder,
-              width: 1,
+                  ? AppColors.secondaryColor.withValues(alpha: 0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: selected
+                    ? AppColors.secondaryColor
+                    : AppColors.greenBorder,
+                width: 1,
+              ),
             ),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Colors.black87,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
+            child: Column(
+              children: [
+                Icon(icon, size: 20, color: Colors.black87),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 12, color: Colors.black87),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
