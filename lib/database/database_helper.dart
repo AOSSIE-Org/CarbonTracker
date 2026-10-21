@@ -332,9 +332,11 @@ class DatabaseHelper {
   Future<void> resetDB() async {
     try {
       final Database db = await getDB();
-      await db.delete("user");
-      await db.delete("trips");
-      await db.delete("activity_data");
+      await db.transaction((txn) async {
+        await txn.delete("user");
+        await txn.delete("trips");
+        await txn.delete("activity_data");
+      });
     } on DatabaseException catch (e) {
       throw AppDatabaseException("Failed to reset database: ${e.toString()}");
     }

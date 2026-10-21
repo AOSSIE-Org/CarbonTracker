@@ -51,9 +51,11 @@
 <h1>CarbonTracker</h1>
 </div>
 
-CarbonTracker is a Flutter-based mobile application that helps users track their fitness activity and understand its environmental impact.
+CarbonTracker is a Flutter-based mobile application that helps users track their fitness activity
+and understand its environmental impact.
 
-The app follows a local-first and privacy-focused approach, keeping user, fitness, location, and trip data on the user's device whenever possible.
+The app follows a local-first and privacy-focused approach, keeping user, fitness, location, and
+trip data on the user's device whenever possible.
 
 ## Features
 
@@ -80,9 +82,10 @@ Automatic cleanup of older trip history
 ## ✅ Project Checklist
 
 - [ ] **The mobile app** (if applicable):
-    - [ ] has an _About_ page containing the Aossie's logo and pointing to the social media accounts of the Aossie.
+    - [x] has an _About_ page containing the Aossie's logo and pointing to the social media accounts
+      of the Aossie.
     - [ ] is available for download as a release in this repo.
-    - [ ] is available in the relevant app stores.
+    - [x] is available in the relevant app stores.
 
 ## 🔗 Repository Links
 
@@ -118,7 +121,7 @@ flowchart TD
     M --> E[Start Trip Tracking]
     E --> F[App Records Location and Distance]
     F --> G[Trip Ends]
-    G --> H[Carbon Emissions and Savings Calculated]
+    G --> H[Carbon Savings Calculated]
     H --> D
 
     D --> J[Fitness Screen: View Fitness Metrics]
@@ -138,23 +141,23 @@ flowchart TD
 2. **Logging a Trip**
     - User navigates to the Map screen
     - Starts trip tracking
-    - App records location and distance in the background
+    - App records location and distance
     - User ends the trip
-    - App calculates carbon emissions and savings
-    - Results appear back on the dashboard
+    - App calculates carbon savings
+    - Results appear back on the carbon screen
 
 3. **Reviewing Fitness Metrics**
     - User navigates to the Fitness screen
-    - Views fitness data such as steps, distance, and activity insights
+    - Views fitness data such as steps, distance, blood pressure and activity insights
 
 4. **Managing Data**
     - User navigates to the Profile screen
     - Can export trip history as JSON or clear stored data at any time
-   
+
 5. **View Carbon Metrics**
     - Reviewing Carbon Insights
     - User navigates to the Carbon screen
-    - Views daily and weekly carbon emissions and carbon savings
+    - Views daily and weekly carbon savings
 
 ## 🍀 Getting Started
 
@@ -206,12 +209,45 @@ flutter run
 
 You can run the project directly from Android Studio or another IDE with Flutter support.
 
+#### 4. Build the App
+
+To create a release build, run the command for your target platform:
+
+```bash
+# Android APK
+flutter build apk --release
+
+# Android App Bundle (for Play Store)
+flutter build appbundle --release
+
+# iOS (requires macOS and Xcode)
+flutter build ios --release
+```
+
+### Testing
+
+#### Unit and Widget Tests
+
+```bash
+flutter test
+```
+
+#### Integration Tests
+
+Integration tests need a connected device or running emulator. Check that one is available with
+`flutter devices`, then run:
+
+```bash
+flutter test integration_test
+```
+
 ## 📱 App Screenshots
 
-|                                                         |                                                        |                                                          |
-|---------------------------------------------------------|--------------------------------------------------------|----------------------------------------------------------|
-| ![Onboarding](assets/screenshots/onboarding_screen.PNG) | ![Dashboard](assets/screenshots/user_info_screen.PNG)  | ![Fitness Screen](assets/screenshots/fitness_screen.PNG) |
-| ![Map Screen](assets/screenshots/map_screen.PNG)        | ![Carbon Screen](assets/screenshots/carbon_screen.PNG) | ![Profile Screen](assets/screenshots/profile_screen.PNG) |
+|                                                          |                                                            |                                                            |
+|----------------------------------------------------------|------------------------------------------------------------|------------------------------------------------------------|
+| ![Onboarding](assets/screenshots/onboarding_screen.PNG)  | ![Dashboard](assets/screenshots/user_info_screen.PNG)      | ![Dashboard](assets/screenshots/user_info_screen_2.PNG)    |
+| ![Fitness Screen](assets/screenshots/fitness_screen.PNG) | ![Fitness Screen](assets/screenshots/fitness_screen_2.PNG) | ![Map Screen](assets/screenshots/map_screen.PNG)           |
+| ![Carbon Screen](assets/screenshots/carbon_screen.PNG)   | ![Profile Screen](assets/screenshots/profile_screen.PNG)   | ![Profile Screen](assets/screenshots/profile_screen_2.PNG) |
 
 ---
 
@@ -219,7 +255,9 @@ You can run the project directly from Android Studio or another IDE with Flutter
 
 ⭐ Don't forget to star this repository if you find it useful! ⭐
 
-Thank you for considering contributing to this project! Contributions are highly appreciated and welcomed. To ensure smooth collaboration, please refer to our [Contribution Guidelines](./CONTRIBUTING.md).
+Thank you for considering contributing to this project! Contributions are highly appreciated and
+welcomed. To ensure smooth collaboration, please refer to
+our [Contribution Guidelines](./CONTRIBUTING.md).
 
 ## ✨ Maintainers
 
@@ -236,6 +274,6 @@ See the [LICENSE](LICENSE) file for details.
 
 Thanks a lot for spending your time helping CarbonTracker grow. Keep rocking 🥂
 
-[![Contributors](https://contrib.rocks/image?repo=AOSSIE-Org/CarbonTracker)](https://github.com/AOSSIE-Org/TODO/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=AOSSIE-Org/CarbonTracker/graphs/contributors)](https://github.com/AOSSIE-Org/TODO/graphs/contributors)
 
 © 2026 AOSSIE

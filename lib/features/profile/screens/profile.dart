@@ -262,7 +262,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 icon: Icons.bolt,
                 label: 'High',
                 type: 'tracking',
-                onTap: () => onTrackingSelection(TrackingOption.high),
+                onTap: null,
               ),
               const SizedBox(width: 10),
               TrackingOptionTile(
@@ -270,7 +270,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 icon: Icons.energy_savings_leaf,
                 label: 'Eco',
                 type: 'tracking',
-                onTap: () => onTrackingSelection(TrackingOption.eco),
+                onTap: null,
               ),
             ],
           ),

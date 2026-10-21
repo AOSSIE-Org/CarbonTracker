@@ -44,7 +44,18 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
               const SizedBox(height: 20),
               Align(
                 alignment: Alignment.centerRight,
-                child: GestureDetector(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: () => showInfoModal(
+                    context,
+                    carbonModalTitle,
+                    carbonModalData,
+                    'Close',
+                  ),
                   child: Text(
                     "Know more  ›",
                     style: TextStyle(
@@ -52,12 +63,6 @@ class _CarbonTrackerScreenState extends ConsumerState<CarbonTrackerScreen> {
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
-                  ),
-                  onTap: () => showInfoModal(
-                    context,
-                    carbonModalTitle,
-                    carbonModalData,
-                    'Close',
                   ),
                 ),
               ),
