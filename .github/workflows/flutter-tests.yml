@@ -1,0 +1,50 @@
+name: Flutter Tests
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      FLUTTER_VERSION: 3.44.0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Static analysis
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+  required-check:
+    name: Required Flutter Tests
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check test result
+        env:
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          if [ "$TEST_RESULT" != "success" ]; then
+            echo "Flutter tests failed or did not complete successfully."
+            exit 1
+          fi
+          echo "All Flutter checks passed."
