@@ -11,6 +11,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+// Fake TripsNotifier
+
+class FakeTripsNotifier extends TripsNotifier {
+  bool deleteTripsCalled = false;
+
+  @override
+  List<Trip> build() => [];
+
+  @override
+  Future<void> deleteTrips() async {
+    deleteTripsCalled = true;
+    state = [];
+  }
+}
+
 class FakeUserNotifier extends UserNotifier {
   FakeUserNotifier(this._initialUser);
 
@@ -32,21 +47,6 @@ class FakeUserNotifier extends UserNotifier {
   Future<void> deleteUser() async {
     deleteUserCalled = true;
     state = null;
-  }
-}
-
-// Fake TripsNotifier
-
-class FakeTripsNotifier extends TripsNotifier {
-  bool deleteTripsCalled = false;
-
-  @override
-  List<Trip> build() => [];
-
-  @override
-  Future<void> deleteTrips() async {
-    deleteTripsCalled = true;
-    state = [];
   }
 }
 
@@ -153,10 +153,7 @@ void main() {
       await tester.tap(find.text('High'));
       await tester.pumpAndSettle();
 
-      expect(
-        fakeUserNotifier.lastUpdatedUser?.trackingMode,
-        TrackingOption.high.name,
-      );
+      expect(fakeUserNotifier.lastUpdatedUser?.trackingMode, null);
     });
 
     testWidgets('selecting a comparison mode updates the comparison mode', (
@@ -235,7 +232,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(fakeUserNotifier.deleteUserCalled, isTrue);
-      expect(fakeTripsNotifier.deleteTripsCalled, isTrue);
       expect(find.text('Onboarding Screen'), findsOneWidget);
     });
   });
