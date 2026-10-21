@@ -346,3 +346,6 @@ build/
 # Flutter generated
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# Security review artifacts
+unremediated-security-reviews/
