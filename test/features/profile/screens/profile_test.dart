@@ -1,5 +1,4 @@
 import 'package:carbon_tracker/core/enums/comparison_modes.dart';
-import 'package:carbon_tracker/core/data/tracking_options.dart';
 import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
 import 'package:carbon_tracker/database/models/trips.dart';
