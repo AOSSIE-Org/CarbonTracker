@@ -90,6 +90,7 @@ Automatic cleanup of older trip history
 ## 🔗 Repository Links
 
 1. [Main Repository](https://github.com/AOSSIE-Org/CarbonTracker.git)
+2. [Report a Bug / Issue Tracker](https://github.com/AOSSIE-Org/CarbonTracker/issues)
 
 ## 🏗️ Architecture Diagram
 
@@ -258,6 +259,8 @@ flutter test integration_test
 Thank you for considering contributing to this project! Contributions are highly appreciated and
 welcomed. To ensure smooth collaboration, please refer to
 our [Contribution Guidelines](./CONTRIBUTING.md).
+
+🐛 Found a bug? Please [open an issue](https://github.com/AOSSIE-Org/CarbonTracker/issues/new) with steps to reproduce, expected vs. actual behavior, and your device/OS.
 
 ## ✨ Maintainers
 
