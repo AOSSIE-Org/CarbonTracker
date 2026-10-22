@@ -243,6 +243,15 @@ CarbonTracker follows standard Dart and Flutter conventions.
 - Avoid code duplication
 - Avoid unnecessary complexity and premature optimization
 
+## 🧪 Testing Policy
+
+All new functionality must include tests in the automated test suite. Pull requests that add or change
+behavior without corresponding tests may be asked to add them before merging.
+
+- Unit and widget tests go in `test/`
+- Integration tests go in `integration_test/`
+- Run `flutter test` before opening a PR and make sure all tests pass
+
 ### Dart & Flutter
 
 - Follow the [Effective Dart](https://dart.dev/effective-dart) style guide
