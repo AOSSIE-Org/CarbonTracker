@@ -13,6 +13,7 @@ import 'package:carbon_tracker/features/profile/widgets/tracking_option_tile.dar
 import 'package:carbon_tracker/features/profile/widgets/transport_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:carbon_tracker/features/fitness/providers/health_permission_provider.dart';
 import 'package:go_router/go_router.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -141,6 +142,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildMyDataCard(),
+                const SizedBox(height: 16),
+                _buildHealthPermissionsCard(),
                 const SizedBox(height: 24),
                 _buildSignOut(),
               ],
@@ -354,6 +357,88 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHealthPermissionsCard() {
+    final permStatus = ref.watch(healthPermissionStatusProvider);
+    final String statusText;
+    final Color statusColor;
+
+    if (permStatus?.isGranted == true) {
+      statusText = 'Granted';
+      statusColor = AppColors.greenIcon;
+    } else if (permStatus?.isPartial == true) {
+      statusText = 'Partially Granted';
+      statusColor = const Color(0xFF2563EB);
+    } else if (permStatus?.isUnavailable == true) {
+      statusText = 'Not Installed';
+      statusColor = const Color(0xFFD97706);
+    } else {
+      statusText = 'Denied';
+      statusColor = const Color(0xFFDC2626);
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.metricsBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.greenIconBg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.health_and_safety_outlined,
+              size: 18,
+              color: AppColors.greenIcon,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Health Permissions',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  statusText,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: statusColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            key: const Key('profile_health_permissions_button'),
+            onPressed: () async {
+              final service = ref.read(healthPermissionServiceProvider);
+              if (permStatus?.isUnavailable == true) {
+                await service.openHealthConnectPlayStore();
+              } else {
+                await service.openSettings();
+              }
+            },
+            child: Text(
+              permStatus?.isGranted == true ? 'Manage' : 'Grant',
+              style: const TextStyle(
+                color: AppColors.secondaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
