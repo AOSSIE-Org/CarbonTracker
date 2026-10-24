@@ -1,0 +1,6 @@
+First release of CarbonTracker, a privacy-first fitness and carbon savings tracker.
+
+- Carbon dashboard with your carbon savings
+- Fitness metrics with Health Connect support
+- Map with location search
+- Local-first storage: no accounts, no cloud tracking

@@ -207,6 +207,19 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 14),
+        if (activities.isEmpty) ...[
+          Column(
+            children: [
+              Center(
+                child: Text(
+                  "No activities recorded by watch yet",
+                  style: TextStyle(color: AppColors.subtitleText),
+                ),
+              ),
+              SizedBox(height: 20),
+            ],
+          ),
+        ],
         ListView.builder(
           itemBuilder: (context, index) =>
               ActivityCard(activity: activities[index]),
@@ -260,25 +273,25 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
                           ),
                     const SizedBox(height: 20),
 
-                    if(!_isRefreshing)
-                    GestureDetector(
-                      onTap: () {
-                        showInfoModal(
-                          context,
-                          "Why Some Health Metrics Aren’t Available",
-                          metricsModalData,
-                          'Close',
-                        );
-                      },
-                      child: const Text(
-                        "Can't see some metrics?",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.secondaryColor,
-                          decoration: TextDecoration.underline,
+                    if (!_isRefreshing)
+                      GestureDetector(
+                        onTap: () {
+                          showInfoModal(
+                            context,
+                            "Why Some Health Metrics Aren’t Available",
+                            metricsModalData,
+                            'Close',
+                          );
+                        },
+                        child: const Text(
+                          "Can't see some metrics?",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.secondaryColor,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
-                    ),
 
                     const SizedBox(height: 30),
 
