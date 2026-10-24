@@ -1,0 +1,12 @@
+CarbonTracker is a privacy-first app that tracks your fitness activity and the carbon savings of your daily movement.
+
+Your data stays on your device. There are no accounts and no cloud tracking.
+
+Features:
+- Carbon dashboard showing your carbon savings
+- Fitness metrics, with Health Connect support
+- Map screen with location search
+- Profile screen for your personal details
+- Local-first storage on your device
+
+CarbonTracker is free software, licensed under GPLv3, and developed with AOSSIE.
