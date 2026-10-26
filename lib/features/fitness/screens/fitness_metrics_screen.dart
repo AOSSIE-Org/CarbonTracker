@@ -32,6 +32,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   List<ActivityData> activities = [];
   late final IHealthService _healthService;
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  String? activitiesError;
 
   @override
   void initState() {
@@ -98,20 +99,40 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   }
 
   Future<void> getExerciseData() async {
+    if (mounted) setState(() => activitiesError = null);
+
     try {
       await WatchService.getExerciseData();
     } on TimeoutException catch (e) {
       debugPrint('Timeout while fetching exercise data: $e');
+      if (!mounted) return;
+      setState(() {
+        activitiesError =
+            "Timeout while fetching exercise data. Please try again.";
+      });
     } on PlatformException catch (e) {
+      // Expected when no watch is connected; fall back to stored activities
       debugPrint(
         'PlatformException while fetching exercise data: ${e.message}',
       );
+      if (!mounted) return;
+      setState(() {
+        activitiesError = "Watch is not connected or unavailable";
+      });
     } on MissingPluginException catch (e) {
       debugPrint(
         'MissingPluginException while fetching exercise data: ${e.message}',
       );
+      if (!mounted) return;
+      setState(() {
+        activitiesError = "Something went wrong! Please try again.";
+      });
     } catch (e) {
       debugPrint('Error while fetching exercise data: $e');
+      if (!mounted) return;
+      setState(() {
+        activitiesError = "Something went wrong! Please try again.";
+      });
     }
     try {
       final activityData = await _dbHelper.queryAll(
@@ -123,6 +144,10 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
       setState(() => activities = activityData);
     } catch (e) {
       debugPrint('Error while loading stored activities: $e');
+      if (!mounted) return;
+      setState(() {
+        activitiesError = "Couldn't load stored activities. Please try again.";
+      });
     }
   }
 
@@ -207,7 +232,24 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 14),
-        if (activities.isEmpty) ...[
+        if (activitiesError != null && activities.isEmpty)
+          Column(
+            children: [
+              Center(
+                child: Text(
+                  activitiesError!,
+                  style: TextStyle(color: AppColors.subtitleText),
+                ),
+              ),
+              Center(
+                child: TextButton(
+                  onPressed: _onRefresh,
+                  child: const Text('Retry'),
+                ),
+              ),
+            ],
+          )
+        else if (activities.isEmpty)
           Column(
             children: [
               Center(
@@ -219,7 +261,6 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
               SizedBox(height: 20),
             ],
           ),
-        ],
         ListView.builder(
           itemBuilder: (context, index) =>
               ActivityCard(activity: activities[index]),
