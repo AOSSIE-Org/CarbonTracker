@@ -277,6 +277,6 @@ See the [LICENSE](LICENSE) file for details.
 
 Thanks a lot for spending your time helping CarbonTracker grow. Keep rocking 🥂
 
-[![Contributors](https://contrib.rocks/image?repo=AOSSIE-Org/CarbonTracker/graphs/contributors)](https://github.com/AOSSIE-Org/CarbonTracker/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=AOSSIE-Org/CarbonTracker)](https://github.com/AOSSIE-Org/CarbonTracker/graphs/contributors)
 
 © 2026 AOSSIE
