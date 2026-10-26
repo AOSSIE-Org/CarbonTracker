@@ -30,7 +30,6 @@ class MainActivity : FlutterFragmentActivity() {
     */
 
     private lateinit var matchmakingChannel: MethodChannel
-    private lateinit var wearChannel: MethodChannel
 
     private lateinit var client: HealthConnectClient
 
@@ -51,21 +50,14 @@ class MainActivity : FlutterFragmentActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-
-            pendingResult?.success(
-                mapOf(
-                    "status" to "completed", "message" to "matchmaking flow completed successfully."
-                )
-            )
+            complete("completed", "matchmaking flow completed successfully.")
         } else {
-
-            pendingResult?.success(
-                mapOf(
-                    "status" to "cancelled", "message" to "matchmaking flow was canceled."
-                )
-            )
+            complete("cancelled", "matchmaking flow was cancelled by the user.")
         }
+    }
 
+    private fun complete(status: String, message: String) {
+        pendingResult?.success(mapOf("status" to status, "message" to message))
         pendingResult = null
     }
 
@@ -85,47 +77,20 @@ class MainActivity : FlutterFragmentActivity() {
             Log.d("HC", "Granted permissions: $grantedPermissions")
 
 
-            if (client.features.getFeatureStatus(
-                    HealthConnectFeatures.FEATURE_MATCHMAKING
-                ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
-            ) {
-                // Feature is available
 
-                Log.d("HC", "Granted permissions: $grantedPermissions")
-
-                lifecycleScope.launch {
-                    try {
-                        performMatchmaking()
-                    } catch (e: Exception) {
-                        pendingResult?.error(
-                            "MATCHMAKING_ERROR", e.message, null
-                        )
-                        pendingResult = null
-                    }
+            lifecycleScope.launch {
+                try {
+                    performMatchmaking()
+                } catch (e: Exception) {
+                    Log.e("HC", "Matchmaking failed", e)
+                    complete("failed", e.message ?: "unknown")
                 }
-
-            } else {
-
-                Log.d("HC", "Matchmaking feature is unavailable")
-
-                pendingResult?.success(
-                    mapOf(
-                        "status" to "not_available",
-                        "message" to "Matchmaking is not available on this device"
-                    )
-                )
-
-                pendingResult = null
-
             }
+
 
         } else {
             // Handle the case where permissions were not granted.
-            pendingResult?.error(
-                "PERMISSION_DENIED", "Required permissions were not granted", null
-            )
-
-            pendingResult = null
+            complete("permission_denied", "Required permissions were not granted")
         }
 
     }
@@ -143,25 +108,35 @@ class MainActivity : FlutterFragmentActivity() {
         WearChannel.setMethodHandler(this)
         matchmakingChannel.setMethodCallHandler { call, result ->
 
+            if (call.method != "showMatchmakingModal") {
+                result.notImplemented()
+                return@setMethodCallHandler
+            }
+            if (pendingResult != null) {
+                result.success(mapOf("status" to "busy"))
+                return@setMethodCallHandler
+            }
+
             pendingResult = result
 
-            if (call.method == "showMatchmakingModal") {
+            val status = HealthConnectClient.getSdkStatus(this)
 
-                val status = HealthConnectClient.getSdkStatus(this)
+            Log.d("HC", "SDK Status = $status")
 
-                Log.d("HC", "SDK Status = $status")
-
-                if (status != HealthConnectClient.SDK_AVAILABLE) {
-                    result.error(
-                        "HEALTH_CONNECT_UNAVAILABLE", "Health Connect is unavailable", null
-                    )
-                    return@setMethodCallHandler
-                }
-
-                client = HealthConnectClient.getOrCreate(this)
+            if (status != HealthConnectClient.SDK_AVAILABLE) {
+                complete("not_available", "Health Connect SDK is not available on this device")
+                return@setMethodCallHandler
+            }
 
 
-                lifecycleScope.launch {
+
+
+            lifecycleScope.launch {
+
+                try {
+
+
+                    client = HealthConnectClient.getOrCreate(this@MainActivity)
 
                     val grantedPermissions = client.permissionController.getGrantedPermissions()
 
@@ -170,25 +145,17 @@ class MainActivity : FlutterFragmentActivity() {
                         return@launch
                     } else {
 
-                        try {
-                            performMatchmaking()
-                        } catch (e: Exception) {
-                            pendingResult?.error(
-                                "MATCHMAKING_ERROR", e.message, null
-                            )
-                            pendingResult = null
-                        }
+
+                        performMatchmaking()
 
                     }
-
+                } catch (e: Exception) {
+                    Log.e("HC", "Matchmaking failed", e)
+                    complete("failed", e.message ?: "unknown")
                 }
-
-            } else {
-                result.notImplemented()
             }
+
         }
-
-
     }
 
 
@@ -211,28 +178,17 @@ class MainActivity : FlutterFragmentActivity() {
         matchmakingLauncher.launch(intent)
     }
 
+    @OptIn(ExperimentalMatchmakingApi::class)
     private suspend fun performMatchmaking() {
-        if (checkMatchmakingPossible()) {
-
-            Log.d("HC", "Launching matchmaking request")
-
-            launchMatchmaking()
-        } else {
-
-            // Matchmaking is not possible on this device.
-
-            Log.d(
-                "HC", "Matchmaking isn't possible. User may not have granted permissions."
-            )
-
-            pendingResult?.success(
-                mapOf(
-                    "status" to "not_possible",
-                    "message" to "Matchmaking isn't possible on this device."
-                )
-            )
-
-            pendingResult = null
+        val feature = client.features.getFeatureStatus(HealthConnectFeatures.FEATURE_MATCHMAKING)
+        Log.d("HC", "Feature status = $feature")
+        if (feature != HealthConnectFeatures.FEATURE_STATUS_AVAILABLE) {
+            complete("not_available", "Matchmaking is not available on this device")
+            return
         }
+        val possible = checkMatchmakingPossible()
+        Log.d("HC", "isMatchmakingPossible = $possible")
+        if (possible) launchMatchmaking()
+        else complete("not_possible", "Matchmaking isn't possible on this device")
     }
 }

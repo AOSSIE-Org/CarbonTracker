@@ -18,6 +18,8 @@ class MatchmakingService {
         case "cancelled":
         case "not_available":
         case "not_possible":
+        case "failed":
+        case "permission_denied":
           return "proceed";
 
         default:
