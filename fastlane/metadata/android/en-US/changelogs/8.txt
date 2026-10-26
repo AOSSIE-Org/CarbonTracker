@@ -1,0 +1,3 @@
+- Fixed the splash screen logo appearing zoomed in on Android 12 and above
+- Fixed an error during onboarding when connecting Health Connect on some devices
+- Smaller downloads: separate builds for each device type
