@@ -32,6 +32,8 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   List<ActivityData> activities = [];
   late final IHealthService _healthService;
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  String? activitiesError; // watch-fetch errors
+  String? storedActivitiesError; // DB load errors
 
   @override
   void initState() {
@@ -98,20 +100,45 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
   }
 
   Future<void> getExerciseData() async {
+    if (mounted) {
+      setState(() {
+        activitiesError = null;
+        storedActivitiesError = null;
+      });
+    }
+
     try {
       await WatchService.getExerciseData();
     } on TimeoutException catch (e) {
       debugPrint('Timeout while fetching exercise data: $e');
+      if (!mounted) return;
+      setState(() {
+        activitiesError =
+            "Timeout while fetching exercise data. Please try again.";
+      });
     } on PlatformException catch (e) {
+      // Expected when no watch is connected; fall back to stored activities
       debugPrint(
         'PlatformException while fetching exercise data: ${e.message}',
       );
+      if (!mounted) return;
+      setState(() {
+        activitiesError = "Watch is not connected or unavailable";
+      });
     } on MissingPluginException catch (e) {
       debugPrint(
         'MissingPluginException while fetching exercise data: ${e.message}',
       );
+      if (!mounted) return;
+      setState(() {
+        activitiesError = "Something went wrong! Please try again.";
+      });
     } catch (e) {
       debugPrint('Error while fetching exercise data: $e');
+      if (!mounted) return;
+      setState(() {
+        activitiesError = "Something went wrong! Please try again.";
+      });
     }
     try {
       final activityData = await _dbHelper.queryAll(
@@ -123,6 +150,10 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
       setState(() => activities = activityData);
     } catch (e) {
       debugPrint('Error while loading stored activities: $e');
+      if (!mounted) return;
+      setState(() {
+        storedActivitiesError = "Couldn't refresh stored activities.";
+      });
     }
   }
 
@@ -207,9 +238,59 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 14),
-        if (activities.isEmpty) ...[
+
+        // 1. Primary: watch error (always shown, with Retry)
+        if (activitiesError != null)
           Column(
             children: [
+              Center(
+                child: Text(
+                  activitiesError!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.subtitleText),
+                ),
+              ),
+              Center(
+                child: TextButton(
+                  onPressed: _onRefresh,
+                  child: const Text('Retry'),
+                ),
+              ),
+            ],
+          ),
+
+        // 2. Secondary: DB error (always shown, even with stale data)
+        if (storedActivitiesError != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              children: [
+                Center(
+                  child: Text(
+                    activities.isEmpty
+                        ? storedActivitiesError!
+                        : '$storedActivitiesError Showing previously loaded activities.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.subtitleText),
+                  ),
+                ),
+                if (activitiesError == null)
+                  Center(
+                    child: TextButton(
+                      onPressed: _onRefresh,
+                      child: const Text('Retry'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+        // 3. Empty state: only when nothing went wrong
+        if (activities.isEmpty &&
+            activitiesError == null &&
+            storedActivitiesError == null)
+          Column(
+            children: const [
               Center(
                 child: Text(
                   "No activities recorded by watch yet",
@@ -219,7 +300,7 @@ class _FitnessMetricsScreenState extends ConsumerState<FitnessMetricsScreen> {
               SizedBox(height: 20),
             ],
           ),
-        ],
+
         ListView.builder(
           itemBuilder: (context, index) =>
               ActivityCard(activity: activities[index]),

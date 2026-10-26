@@ -142,7 +142,7 @@
 
 - [x] 🔴 **vulnerability_report_process** — A vulnerability reporting process is documented (e.g.,
   `SECURITY.md`).
-    - *Evidence URL:* https://github.com/AOSSIE-Org/CarbonTracker/security/policy
+    - *Evidence URL:* https://github.com/AOSSIE-Org/CarbonTracker/blob/main/SECURITY.md
 
 - [x] 🟡 **vulnerability_report_private** — If private vulnerability reporting is supported, the
   method for private submission is documented.
