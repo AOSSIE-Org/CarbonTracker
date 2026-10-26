@@ -19,9 +19,9 @@ watch app, so it is fixed in the watch repo.
 ### 2. Matchmaking API error during onboarding
 
 - **Status:** Fixed (this repo)
-- **Fix:** In `MainActivity.kt`, moved the feature check into `performMatchmaking()` so every path
-  uses it. All error results are now status results (e.g. `not_available`, `failed`), so onboarding
-  no longer errors out.
+- **Fix:** In `MainActivity.kt`, moved the feature check into
+  performMatchmaking() so every path uses it. The listed matchmaking statuses (e.g., not_available,
+  failed) no longer block onboarding.
 
 ### 3. Room schema export warning (watch app)
 
