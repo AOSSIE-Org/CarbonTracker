@@ -150,7 +150,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="v${{ steps.get_version.outputs.version }}"
-          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+          gh release view "$TAG" --repo "${{ github.repository }}" --json isDraft,tagName,url || true
+          IS_DRAFT=$(gh release view "$TAG" --repo "${{ github.repository }}" --json isDraft --jq '.isDraft' 2>/dev/null || echo "none")
+          if [ "$IS_DRAFT" = "false" ]; then
             echo "Release $TAG is already published. Nothing to do."
             echo "published=true" >> "$GITHUB_OUTPUT"
           else
