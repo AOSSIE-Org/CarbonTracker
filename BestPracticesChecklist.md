@@ -25,15 +25,17 @@
 ## Score Summary
 
 <!-- Auto-updated by checklist-score.yml workflow — do not edit manually -->
-| Category           | Met | Total | Status |
-|--------------------|-----|-------|--------|
-| Basics             | 8   | 8     | ✅     |
-| Change Control     | 5   | 6     | 🟡     |
-| Reporting          | 8   | 8     | ✅     |
-| Quality            | 8   | 11     | 🟡     |
-| Security           | 9   | 9     | ✅     |
-| Analysis           | 1   | 7     | 🔴     |
-| **Total**          | **39** | **49** | **80%** |
+
+| Category       | Met    | Total  | Status  |
+|----------------|--------|--------|---------|
+| Basics         | 8      | 8      | ✅       |
+| Change Control | 5      | 6      | 🟡      |
+| Reporting      | 8      | 8      | ✅       |
+| Quality        | 8      | 11     | 🟡      |
+| Security       | 9      | 9      | ✅       |
+| Analysis       | 1      | 7      | 🔴      |
+| **Total**      | **39** | **49** | **80%** |
+
 ---
 
 ## 🏗️ Basics
@@ -58,11 +60,11 @@
 
 - [x] 🔴 **documentation_basics** — Basic documentation exists for the software (README, Wiki, or
   docs folder).
-    - *Evidence URL: https://github.com/AOSSIE-Org/CarbonTracker/blob/main/README.md
+    - *Evidence URL*: https://github.com/AOSSIE-Org/CarbonTracker/blob/main/README.md
 
 - [~] 🔴 **documentation_interface** — Reference documentation describes the external interface (API
   inputs/outputs, CLI flags, config schema, etc.).
-    - *Evidence URL:* `[ ]` N/A — *Justification:* CarbonTracker is a mobile application and does
+    - *Evidence URL:* N/A — *Justification:* CarbonTracker is a mobile application and does
       not expose a public API, CLI, or external configuration interface requiring reference
       documentation.
 
@@ -106,7 +108,7 @@
 
 - [~] 🔴 **release_notes_vulns** — Release notes identify every publicly known vulnerability (with
   CVE) fixed in that release.
-    - *Evidence URL:* `[ ]` N/A — *Justification (no publicly known vulns / users can't
+    - *Evidence URL:* N/A — *Justification (no publicly known vulns / users can't
       self-update):*
 
 ---
@@ -150,7 +152,7 @@
 
 - [~] 🔴 **vulnerability_report_response** — Initial response to any vulnerability report received in
   the last 6 months was within 14 days.
-    - *Self-certification note:* `[ ]` N/A — *Justification (no reports received):*
+    - *Self-certification note:*  N/A — *Justification (no reports received):*
 
 ---
 
@@ -297,9 +299,9 @@
   enabled (not just production mode). *(SUGGESTED)*
     - *Note:*
 
-- [ ] 🔴 **dynamic_analysis_fixed** — Medium+ severity vulnerabilities found by dynamic analysis are
+- [~] 🔴 **dynamic_analysis_fixed** — Medium+ severity vulnerabilities found by dynamic analysis are
   fixed in a timely manner.
-    - *Note:* `[x]` N/A (no dynamic analysis tooling is used; manual use of the app has not surfaced
+    - *Note:* N/A (no dynamic analysis tooling is used; manual use of the app has not surfaced
       any vulnerabilities, and any found would be fixed promptly)
 
 - [ ] 🔵 **dynamic_analysis_unsafe** — If the project uses memory-unsafe languages (C/C++), memory

@@ -1,5 +1,3 @@
-You can raise this report for me # Audit Report: <Project Name>
-
 **Auditor:** Vaibhav Aryan
 **Auditee:** Aneesa Fatima
 **Repo:** https://github.com/AOSSIE-Org/CarbonTracker.git https://github.com/AOSSIE-Org/CarbonTracker-WatchCompanionApp
