@@ -81,10 +81,10 @@ Automatic cleanup of older trip history
 
 ## ✅ Project Checklist
 
-- [ ] **The mobile app** (if applicable):
+- [x] **The mobile app** (if applicable):
     - [x] has an _About_ page containing the Aossie's logo and pointing to the social media accounts
       of the Aossie.
-    - [ ] is available for download as a release in this repo.
+    - [x] is available for download as a release in this repo.
     - [x] is available in the relevant app stores.
 
 ## 🔗 Repository Links
@@ -260,7 +260,8 @@ Thank you for considering contributing to this project! Contributions are highly
 welcomed. To ensure smooth collaboration, please refer to
 our [Contribution Guidelines](./CONTRIBUTING.md).
 
-🐛 Found a bug? Please [open an issue](https://github.com/AOSSIE-Org/CarbonTracker/issues/new) with steps to reproduce, expected vs. actual behavior, and your device/OS.
+🐛 Found a bug? Please [open an issue](https://github.com/AOSSIE-Org/CarbonTracker/issues/new) with
+steps to reproduce, expected vs. actual behavior, and your device/OS.
 
 ## ✨ Maintainers
 
@@ -272,6 +273,10 @@ This project is licensed under the GNU General Public License v3.0.
 See the [LICENSE](LICENSE) file for details.
 
 ---
+
+## 🔒 OpenSSF Scorecard
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/AOSSIE-Org/CarbonTracker/badge)](https://scorecard.dev/viewer/?uri=github.com/AOSSIE-Org/CarbonTracker)
 
 ## 💪 Thanks To All Contributors
 
