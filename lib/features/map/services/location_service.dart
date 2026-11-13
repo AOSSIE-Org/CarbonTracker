@@ -1,9 +1,7 @@
-import 'package:carbon_tracker/features/map/models/search_options.dart';
 import 'package:carbon_tracker/features/map/models/search_results.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:nominatim_flutter/model/request/request.dart';
-import 'package:nominatim_flutter/model/response/nominatim_response.dart';
 import 'package:nominatim_flutter/nominatim_flutter.dart';
 
 class MapService {
@@ -13,14 +11,17 @@ class MapService {
   const MapService();
 
   Future<Map<String, dynamic>> isPermissionGranted() async {
-
     LocationPermission permission;
 
     // Test if location services are enabled.
     final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       // Location services are not enabled
-      return {'status': false, 'message': 'Location services are disabled.'};
+      return {
+        'status': false,
+        'reason': 'service_disabled',
+        'message': 'Location services are disabled.',
+      };
     }
 
     permission = await Geolocator.checkPermission();
@@ -28,14 +29,21 @@ class MapService {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         // Permissions are denied
-
-        return {'status': false, 'message': 'Location permissions are denied.'};
+        return {
+          'status': false,
+          'reason': 'permission_denied',
+          'message': 'Location permissions are denied.',
+        };
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       // Permissions are denied forever, handle appropriately.
-      return {'status': false, 'message': 'Location permissions are denied.'};
+      return {
+        'status': false,
+        'reason': 'permission_denied_forever',
+        'message': 'Location permissions are permanently denied.',
+      };
     }
 
     // When we reach here, permissions are granted and we can
@@ -109,89 +117,51 @@ class MapService {
     }
   }
 
-  Future<List<NominatimResponse>> _makeSearch(String query) async {
-    // Make a search request using Nominatim
+  Future<List<SearchResult>> searchPlace(String query, {int limit = 5}) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return [];
 
     try {
       configure();
-      var searchRequest = SearchRequest(
-        query: query,
+      final searchRequest = SearchRequest(
+        query: trimmed,
         addressDetails: true,
-        limit: 3,
+        limit: limit,
       );
 
-      var searchResults = await NominatimFlutter.instance.search(
+      final searchResults = await NominatimFlutter.instance.search(
         searchRequest: searchRequest,
         language: 'en-US,en;q=0.5',
       );
 
-      debugPrint(
-        "Making search request $query : ${searchResults.length} results found",
-      );
-
-      return searchResults;
+      return searchResults
+          .where(
+            (result) =>
+                result.displayName != null &&
+                result.displayName!.isNotEmpty &&
+                result.lat != null &&
+                result.lon != null &&
+                double.tryParse(result.lat!) != null &&
+                double.tryParse(result.lon!) != null,
+          )
+          .map(
+            (result) => SearchResult(
+              locationString: result.displayName!,
+              lat: double.parse(result.lat!),
+              lon: double.parse(result.lon!),
+            ),
+          )
+          .toList();
     } catch (e) {
-      debugPrint("Error searching for places: $e");
+      debugPrint("Error searching places for '$trimmed': $e");
       return [];
     }
   }
 
-  Future<SearchOptions> queryPlaces(
-    String currentQuery,
-    String destinationQuery,
-  ) async {
-    // Query places based on the current and destination queries
-
-    List<SearchResult?> currentLocations = [];
-    List<SearchResult?> destinationsLocations = [];
-
-    try {
-      if (currentQuery.isEmpty) {
-        Position currentLocationCoordinates = await getCurrentPosition();
-        final SearchResult? currentLocationAddress =
-            await retrieveAddressFromCoordinates(
-              currentLocationCoordinates.latitude,
-              currentLocationCoordinates.longitude,
-            );
-
-        currentLocations = [currentLocationAddress];
-      } else if (currentQuery.isNotEmpty && destinationQuery.isNotEmpty) {
-        currentLocations = (await _makeSearch(currentQuery))
-            .map(
-              (result) => SearchResult(
-                locationString: result.displayName,
-                lat: double.tryParse(result.lat ?? ""),
-                lon: double.tryParse(result.lon ?? ""),
-              ),
-            )
-            .toList();
-
-        destinationsLocations = (await _makeSearch(destinationQuery))
-            .map(
-              (result) => SearchResult(
-                locationString: result.displayName,
-                lat: double.tryParse(result.lat ?? ""),
-                lon: double.tryParse(result.lon ?? ""),
-              ),
-            )
-            .toList();
-      }
-    } catch (e) {
-      debugPrint("Error searching for places: $e");
-    }
-    return SearchOptions(
-      currentLocationResults: currentLocations,
-      destinationLocationResults: destinationsLocations,
-    );
-  }
-
   double calculateDistanceInKm({
     required double startLatitude,
-
     required double startLongitude,
-
     required double endLatitude,
-
     required double endLongitude,
   }) {
     final distanceInMeters = Geolocator.distanceBetween(

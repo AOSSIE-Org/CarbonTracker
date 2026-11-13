@@ -13,6 +13,7 @@ class LocationRow extends StatelessWidget {
   final ValueChanged<SearchResult> onSelection;
   final ValueChanged<String> onChanged;
   final LocationType type;
+  final Widget? trailing;
 
   const LocationRow({
     super.key,
@@ -24,6 +25,7 @@ class LocationRow extends StatelessWidget {
     required this.onSelection,
     required this.onChanged,
     required this.type,
+    this.trailing,
   });
 
   @override
@@ -48,7 +50,7 @@ class LocationRow extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.secondaryColor,
                       ),
@@ -58,7 +60,7 @@ class LocationRow extends StatelessWidget {
                       onChanged: (value) {
                         onChanged(value);
                       },
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.subtitleText,
                       ),
@@ -66,12 +68,18 @@ class LocationRow extends StatelessWidget {
                         isDense: true,
                         hintText: placeholder,
                         border: InputBorder.none,
-                        hintStyle: TextStyle(color: AppColors.subtitleText),
+                        hintStyle: const TextStyle(
+                          color: AppColors.subtitleText,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+              if (trailing != null) ...[
+                const SizedBox(width: 8),
+                trailing!,
+              ],
             ],
           ),
         ),
@@ -79,6 +87,7 @@ class LocationRow extends StatelessWidget {
           LocationOptions(
             options: locations,
             onSelected: (SearchResult selectedLocation) {
+              // FocusScope.of(context).unfocus();
               controller.text = selectedLocation.locationString!;
               onSelection(selectedLocation);
             },

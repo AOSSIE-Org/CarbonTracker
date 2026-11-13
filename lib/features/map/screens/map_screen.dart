@@ -1,15 +1,17 @@
+import 'dart:async';
+
 import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/core/enums/comparison_modes.dart';
 import 'package:carbon_tracker/core/enums/transport_modes.dart';
 import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
+import 'package:carbon_tracker/core/widgets/app_snackbar.dart';
 import 'package:carbon_tracker/database/models/trips.dart';
 import 'package:carbon_tracker/features/carbon/helpers/carbon_calculator.dart';
 import 'package:carbon_tracker/features/map/helpers/time_calculator.dart';
 import 'package:carbon_tracker/features/map/models/search_results.dart';
 import 'package:carbon_tracker/features/map/repositories/trip_repository.dart';
 import 'package:carbon_tracker/features/map/services/location_service.dart';
-import 'package:carbon_tracker/features/map/widgets/location_button.dart';
 import 'package:carbon_tracker/features/map/widgets/location_card.dart';
 import 'package:carbon_tracker/features/map/widgets/map_modal.dart';
 import 'package:carbon_tracker/features/map/widgets/map_ui.dart';
@@ -28,14 +30,12 @@ typedef MapUiBuilder =
     });
 
 class MapScreen extends ConsumerStatefulWidget {
-  final bool isActive;
   final MapService mapOb;
   final TripRepository tripRepo;
   final MapUiBuilder mapUiBuilder;
 
   MapScreen({
     super.key,
-    required this.isActive,
     this.mapOb = const MapService(),
     TripRepository? tripRepo,
     MapUiBuilder? mapUiBuilder,
@@ -48,29 +48,27 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   String _errMessage = "";
-  SearchResult? _currentLocationQuery;
-  SearchResult? _destinationLocationQuery;
-  String _currentLocationString = "";
-  String _destinationLocationString = "";
-  List<SearchResult?> _currentLocations = [];
-  List<SearchResult?> _destinationLocations = [];
-  bool _currentLocationSelected = false;
-  bool _destinationLocationSelected = false;
-  TransportModes? _selectedMode;
+  SearchResult? _startLocation;
+  SearchResult? _destinationLocation;
+  List<SearchResult?> _startLocationSuggestions = [];
+  List<SearchResult?> _destinationLocationSuggestions = [];
+  bool _isStartLocationSelected = false;
+  bool _isDestinationLocationSelected = false;
+  TransportModes? _selectedTransportMode;
   bool _startMapRoute = false;
   int? _currentTripId;
   double? _totalDistanceKm;
   double? _estimatedTimeMinutes;
-  bool _isLoading = false;
+  bool _isLocating = false;
   bool _isStartingTrip = false;
 
-  @override
-  void didUpdateWidget(covariant MapScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
+  Timer? _debounceTimer;
+  int _searchEpoch = 0;
 
-    if (oldWidget.isActive != widget.isActive && widget.isActive) {
-      getLocation();
-    }
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> getLocation() async {
@@ -80,18 +78,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       }
 
       setState(() {
-        _isLoading = true;
+        _isLocating = true;
         _errMessage = "";
       });
 
       final Map<String, dynamic> res = await widget.mapOb.isPermissionGranted();
       if (!mounted) return;
       if (!res['status']) {
-        setState(() {
-          _errMessage =
-              res['message'] ??
-              "Something went wrong while checking location permissions.";
-        });
+        _handleLocationUnavailable(res);
         return;
       }
 
@@ -108,10 +102,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         return;
       }
 
-      setState(() {
-        _currentLocationQuery = location;
-        _currentLocationString = location.locationString!;
-      });
+      _selectStartLocation(location);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -120,69 +111,189 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     } finally {
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _isLocating = false;
         });
       }
     }
   }
 
-  Future<void> fetchAddresses(String? current, String? destination) async {
-    if (current == null ||
-        destination == null ||
-        current.isEmpty ||
-        destination.isEmpty) {
+  void _handleLocationUnavailable(Map<String, dynamic> res) {
+    final reason = res['reason'] as String?;
+    switch (reason) {
+      case 'service_disabled':
+        showAppSnackBar(
+          context,
+          message:
+              'Location services are disabled. Enable GPS to detect your location.',
+          actionLabel: 'Settings',
+          onAction: Geolocator.openLocationSettings,
+        );
+      case 'permission_denied_forever':
+        showAppSnackBar(
+          context,
+          message:
+              'Location permission is permanently denied. Enable it in app settings.',
+          actionLabel: 'Settings',
+          onAction: Geolocator.openAppSettings,
+        );
+      default:
+        showAppSnackBar(
+          context,
+          message:
+              res['message'] as String? ??
+              'Location permission is required to detect your current location.',
+          actionLabel: 'Retry',
+          onAction: getLocation,
+        );
+    }
+  }
+
+  void _onLocationInputChanged(String value, {required bool isStart}) {
+    final trimmed = value.trim();
+    setState(() {
+      if (isStart) {
+        if (_startLocation?.locationString?.trim() != trimmed) {
+          _isStartLocationSelected = false;
+          _startLocation = null;
+          _selectedTransportMode = null;
+        }
+      } else {
+        if (_destinationLocation?.locationString?.trim() != trimmed) {
+          _isDestinationLocationSelected = false;
+          _destinationLocation = null;
+          _selectedTransportMode = null;
+        }
+      }
+    });
+
+    _debounceTimer?.cancel();
+
+    // Immediately clear suggestions if input is blank
+    if (trimmed.isEmpty) {
       setState(() {
-        _errMessage = "Current and destination locations cannot be empty.";
+        _startLocationSuggestions = [];
+        _destinationLocationSuggestions = [];
       });
       return;
     }
 
+    final currentEpoch = ++_searchEpoch;
+    _debounceTimer = Timer(const Duration(milliseconds: 350), () {
+      _executeSearch(trimmed, isStart: isStart, epoch: currentEpoch);
+    });
+  }
+
+  Future<void> _executeSearch(
+    String query, {
+    required bool isStart,
+    required int epoch,
+  }) async {
+    if (epoch != _searchEpoch || !mounted) return;
+
     try {
       setState(() {
-        _isLoading = true;
+        if (isStart) {
+          _destinationLocationSuggestions = [];
+        } else {
+          _startLocationSuggestions = [];
+        }
       });
-      final searchResult = await widget.mapOb.queryPlaces(current, destination);
 
-      if (!mounted) return;
+      final results = await widget.mapOb.searchPlace(query);
+      if (epoch != _searchEpoch || !mounted) return;
 
       setState(() {
-        _currentLocations = searchResult.currentLocationResults;
-        _destinationLocations = searchResult.destinationLocationResults;
+        if (isStart) {
+          _startLocationSuggestions = results;
+        } else {
+          _destinationLocationSuggestions = results;
+        }
       });
     } catch (e) {
-      debugPrint("Error fetching addresses: $e");
-      setState(() {
-        _errMessage = "Error fetching addresses";
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      debugPrint("Error searching locations: $e");
     }
   }
 
+  void _selectStartLocation(SearchResult value) {
+    FocusScope.of(context).unfocus();
+    if (_isSameLocation(value, _destinationLocation)) {
+      showAppSnackBar(
+        context,
+        message: 'Start and destination cannot be the same place.',
+      );
+      return;
+    }
+
+    setState(() {
+      _startLocationSuggestions = [];
+      _destinationLocationSuggestions = [];
+      _isStartLocationSelected = true;
+      _startLocation = value;
+      _selectedTransportMode = null;
+      _totalDistanceKm = null;
+      _estimatedTimeMinutes = null;
+    });
+  }
+
+  void _selectDestinationLocation(SearchResult value) {
+    FocusScope.of(context).unfocus();
+    if (_isSameLocation(_startLocation, value)) {
+      showAppSnackBar(
+        context,
+        message: 'Start and destination cannot be the same place.',
+      );
+      return;
+    }
+
+    setState(() {
+      _destinationLocationSuggestions = [];
+      _startLocationSuggestions = [];
+      _isDestinationLocationSelected = true;
+      _destinationLocation = value;
+      _selectedTransportMode = null;
+      _totalDistanceKm = null;
+      _estimatedTimeMinutes = null;
+    });
+  }
+
+  bool _isSameLocation(SearchResult? a, SearchResult? b) {
+    if (a == null || b == null) return false;
+    if (a.lat != null &&
+        b.lat != null &&
+        a.lon != null &&
+        b.lon != null &&
+        (a.lat! - b.lat!).abs() < 0.0001 &&
+        (a.lon! - b.lon!).abs() < 0.0001) {
+      return true;
+    }
+    if (a.locationString != null &&
+        b.locationString != null &&
+        a.locationString!.trim().toLowerCase() ==
+            b.locationString!.trim().toLowerCase()) {
+      return true;
+    }
+    return false;
+  }
+
   void resetState() {
+    _debounceTimer?.cancel();
     setState(() {
       _startMapRoute = false;
-      _currentLocationSelected = false;
-      _destinationLocationSelected = false;
-      _currentLocations = [];
-      _destinationLocations = [];
-      _destinationLocationQuery = null;
-      _currentLocationQuery = null;
-      _currentLocationString = "";
-      _destinationLocationString = "";
+      _isStartLocationSelected = false;
+      _isDestinationLocationSelected = false;
+      _startLocationSuggestions = [];
+      _destinationLocationSuggestions = [];
+      _destinationLocation = null;
+      _startLocation = null;
       _currentTripId = null;
-      _selectedMode = null;
+      _selectedTransportMode = null;
       _totalDistanceKm = null;
       _estimatedTimeMinutes = null;
     });
   }
 
   Future<void> _startTrip(ComparisonTransportMode comparisonMode) async {
-    if (_selectedMode == null || _totalDistanceKm == null) return;
+    if (_selectedTransportMode == null || _totalDistanceKm == null) return;
 
     setState(() {
       _isStartingTrip = true;
@@ -193,7 +304,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         Trip(
           date: DateTime.now(),
           distance: _totalDistanceKm!,
-          transportMode: _selectedMode!.name,
+          transportMode: _selectedTransportMode!.name,
           carbonSaved: CarbonCalculator.emissionSaved(
             comparisonMode,
             _totalDistanceKm!,
@@ -253,16 +364,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     Positioned.fill(
                       child:
                           _startMapRoute &&
-                              _currentLocationQuery?.lat != null &&
-                              _currentLocationQuery?.lon != null &&
-                              _destinationLocationQuery?.lat != null &&
-                              _destinationLocationQuery?.lon != null
+                              _startLocation?.lat != null &&
+                              _startLocation?.lon != null &&
+                              _destinationLocation?.lat != null &&
+                              _destinationLocation?.lon != null
                           ? widget.mapUiBuilder(
-                              currentLat: _currentLocationQuery!.lat!,
-                              currentLon: _currentLocationQuery!.lon!,
-                              destinationLat: _destinationLocationQuery!.lat!,
-                              destinationLon: _destinationLocationQuery!.lon!,
-                              type: getRoadType(_selectedMode!),
+                              currentLat: _startLocation!.lat!,
+                              currentLon: _startLocation!.lon!,
+                              destinationLat: _destinationLocation!.lat!,
+                              destinationLon: _destinationLocation!.lon!,
+                              type: getRoadType(_selectedTransportMode!),
                             )
                           : Opacity(
                               opacity: 0.7,
@@ -305,8 +416,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                     context,
                                     "Trip Information",
                                     _totalDistanceKm!,
-                                    _currentLocationQuery!.locationString!,
-                                    _destinationLocationQuery!.locationString!,
+                                    _startLocation!.locationString!,
+                                    _destinationLocation!.locationString!,
                                     () async {
                                       await widget.tripRepo.cancelTrip(
                                         _currentTripId!,
@@ -333,7 +444,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                     ),
                                     child: Center(
                                       child: Text(
-                                        "Calculating route for ${_destinationLocationQuery!.locationString}",
+                                        "Calculating route for ${_destinationLocation!.locationString}",
                                         style: TextStyle(
                                           fontSize: 16,
                                           color: AppColors.primaryColor,
@@ -375,43 +486,28 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               LocationCard(
-                                currentLocation: _currentLocationQuery,
-                                onCurrentSelection: (SearchResult value) {
-                                  setState(() {
-                                    _currentLocations = [];
-                                    _currentLocationSelected = true;
-                                    _currentLocationQuery = value;
-                                    _selectedMode = null;
-                                    _totalDistanceKm = null;
-                                    _estimatedTimeMinutes = null;
-                                  });
-                                },
-                                currentLocations: _currentLocations,
-                                destinationLocations: _destinationLocations,
-                                onDestinationSelection: (SearchResult value) {
-                                  setState(() {
-                                    _destinationLocations = [];
-                                    _destinationLocationSelected = true;
-                                    _destinationLocationQuery = value;
-                                    _selectedMode = null;
-                                    _totalDistanceKm = null;
-                                    _estimatedTimeMinutes = null;
-                                  });
-                                },
-
+                                currentLocation: _startLocation,
+                                currentLocations: _startLocationSuggestions,
+                                destinationLocations:
+                                    _destinationLocationSuggestions,
+                                isLocating: _isLocating,
+                                onLocatePressed: getLocation,
+                                onCurrentSelection: _selectStartLocation,
+                                onDestinationSelection:_selectDestinationLocation,
                                 onCurrentChanged: (String value) {
-                                  setState(() {
-                                    _currentLocationString = value;
-                                  });
+                                  _onLocationInputChanged(value, isStart: true);
                                 },
                                 onDestinationChanged: (String value) {
-                                  setState(() {
-                                    _destinationLocationString = value;
-                                  });
+                                  _onLocationInputChanged(
+                                    value,
+                                    isStart: false,
+                                  );
                                 },
                               ),
-                              if (_currentLocationSelected &&
-                                  _destinationLocationSelected) ...[
+                              if (_isStartLocationSelected &&
+                                  _isDestinationLocationSelected &&
+                                  _startLocation != null &&
+                                  _destinationLocation != null) ...[
                                 SizedBox(height: 10),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -451,41 +547,34 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                           TransportModes.values.length,
                                           (i) => ElevatedButton(
                                             onPressed: () {
-                                              final current =
-                                                  _currentLocationQuery;
+                                              final start = _startLocation;
+                                              final dest = _destinationLocation;
 
-                                              final destination =
-                                                  _destinationLocationQuery;
-
-                                              if (current?.lat == null ||
-                                                  current?.lon == null ||
-                                                  destination?.lat == null ||
-                                                  destination?.lon == null) {
-                                                setState(() {
-                                                  _errMessage =
-                                                      "Unable to calculate distance for these locations.";
-                                                });
-
+                                              if (start?.lat == null ||
+                                                  start?.lon == null ||
+                                                  dest?.lat == null ||
+                                                  dest?.lon == null) {
+                                                showAppSnackBar(
+                                                  context,
+                                                  message:
+                                                      "Please select valid locations from the suggestions.",
+                                                );
                                                 return;
                                               }
 
                                               double distanceKm = widget.mapOb
                                                   .calculateDistanceInKm(
-                                                    startLatitude:
-                                                        current!.lat!,
-                                                    startLongitude:
-                                                        current.lon!,
-                                                    endLatitude:
-                                                        destination!.lat!,
-                                                    endLongitude:
-                                                        destination.lon!,
+                                                    startLatitude: start!.lat!,
+                                                    startLongitude: start.lon!,
+                                                    endLatitude: dest!.lat!,
+                                                    endLongitude: dest.lon!,
                                                   );
 
                                               final mode =
                                                   TransportModes.values[i];
 
                                               setState(() {
-                                                _selectedMode = mode;
+                                                _selectedTransportMode = mode;
                                                 _totalDistanceKm = distanceKm;
                                                 _estimatedTimeMinutes =
                                                     calculateTime(
@@ -496,7 +585,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                             },
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor:
-                                                  _selectedMode ==
+                                                  _selectedTransportMode ==
                                                       TransportModes.values[i]
                                                   ? AppColors
                                                         .selectedOptionColor
@@ -521,7 +610,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                           ),
                                         ),
                                       ),
-                                      if (_selectedMode != null) ...[
+                                      if (_selectedTransportMode != null) ...[
                                         SizedBox(height: 20),
                                         Align(
                                           alignment: Alignment.centerLeft,
@@ -590,26 +679,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         ),
                       ),
                     ],
-
-                    if (_selectedMode == null)
-                      Positioned(
-                        bottom: size.height * 0.05,
-                        right: 20,
-                        child: LocateButton(
-                          onPressed:
-                              _currentLocationString.isNotEmpty &&
-                                  _destinationLocationString.isNotEmpty
-                              ? () {
-                                  fetchAddresses(
-                                    _currentLocationString,
-                                    _destinationLocationString,
-                                  );
-                                }
-                              : null,
-                          isLoading: _isLoading,
-                          isShowingMap: _startMapRoute,
-                        ),
-                      ),
                   ],
                 ),
               ),
