@@ -76,10 +76,7 @@ class LocationRow extends StatelessWidget {
                   ],
                 ),
               ),
-              if (trailing != null) ...[
-                const SizedBox(width: 8),
-                trailing!,
-              ],
+              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
             ],
           ),
         ),
@@ -87,7 +84,6 @@ class LocationRow extends StatelessWidget {
           LocationOptions(
             options: locations,
             onSelected: (SearchResult selectedLocation) {
-              // FocusScope.of(context).unfocus();
               controller.text = selectedLocation.locationString!;
               onSelection(selectedLocation);
             },

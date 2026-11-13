@@ -76,7 +76,10 @@ Widget buildTestable({
       userProvider.overrideWith(() => userNotifier ?? FakeUserNotifier(user)),
       tripProvider.overrideWith(() => tripsNotifier ?? FakeTripsNotifier()),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      theme: ThemeData(splashFactory: InkRipple.splashFactory),
+      routerConfig: router,
+    ),
   );
 }
 
