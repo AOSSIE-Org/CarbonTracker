@@ -1,3 +1,4 @@
+import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/features/map/models/location_type.dart';
 import 'package:carbon_tracker/features/map/models/search_results.dart';
 import 'package:carbon_tracker/features/map/widgets/location_row.dart';
@@ -11,6 +12,8 @@ class LocationCard extends StatefulWidget {
   final List<SearchResult?> destinationLocations;
   final ValueChanged<String> onCurrentChanged;
   final ValueChanged<String> onDestinationChanged;
+  final VoidCallback? onLocatePressed;
+  final bool isLocating;
 
   const LocationCard({
     super.key,
@@ -21,6 +24,8 @@ class LocationCard extends StatefulWidget {
     required this.onCurrentSelection,
     required this.onCurrentChanged,
     required this.onDestinationChanged,
+    this.onLocatePressed,
+    this.isLocating = false,
   });
 
   @override
@@ -34,7 +39,9 @@ class _LocationCardState extends State<LocationCard> {
   @override
   void initState() {
     super.initState();
-    currentController = TextEditingController();
+    currentController = TextEditingController(
+      text: widget.currentLocation?.locationString ?? '',
+    );
     destinationController = TextEditingController();
   }
 
@@ -73,14 +80,42 @@ class _LocationCardState extends State<LocationCard> {
         mainAxisSize: MainAxisSize.min,
         children: [
           LocationRow(
-            icon: Icons.my_location,
-            label: 'Current Location',
-            placeholder: 'Where are you at?',
+            icon: Icons.trip_origin_rounded,
+            label: 'Start Location',
+            placeholder: 'Search start location or use GPS',
             locations: widget.currentLocations,
             onSelection: widget.onCurrentSelection,
             controller: currentController,
             onChanged: widget.onCurrentChanged,
             type: LocationType.current,
+            trailing: widget.onLocatePressed == null
+                ? null
+                : SizedBox(
+                    width: 34,
+                    height: 34,
+                    child: widget.isLocating
+                        ? const Center(
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.secondaryColor,
+                              ),
+                            ),
+                          )
+                        : IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            tooltip: 'Use current GPS location',
+                            icon: const Icon(
+                              Icons.gps_fixed,
+                              size: 20,
+                              color: AppColors.secondaryColor,
+                            ),
+                            onPressed: widget.onLocatePressed,
+                          ),
+                  ),
           ),
           if (widget.currentLocations.isEmpty &&
               widget.destinationLocations.isEmpty)

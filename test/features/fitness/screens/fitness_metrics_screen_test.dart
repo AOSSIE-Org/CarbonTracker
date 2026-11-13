@@ -86,7 +86,10 @@ Future<void> _pumpScreen(
         userProvider.overrideWith(() => _FakeUserNotifier(user)),
         healthServiceProvider.overrideWithValue(healthService),
       ],
-      child: const MaterialApp(home: FitnessMetricsScreen()),
+      child: MaterialApp(
+        theme: ThemeData(splashFactory: InkRipple.splashFactory),
+        home: const FitnessMetricsScreen(),
+      ),
     ),
   );
   await tester.pumpAndSettle();

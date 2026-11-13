@@ -3,12 +3,10 @@ import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/core/providers/user_provider.dart';
 import 'package:carbon_tracker/database/models/trips.dart';
 import 'package:carbon_tracker/database/models/user.dart';
-import 'package:carbon_tracker/features/map/models/search_options.dart';
 import 'package:carbon_tracker/features/map/models/search_results.dart';
 import 'package:carbon_tracker/features/map/repositories/trip_repository.dart';
 import 'package:carbon_tracker/features/map/screens/map_screen.dart';
 import 'package:carbon_tracker/features/map/services/location_service.dart';
-import 'package:carbon_tracker/features/map/widgets/location_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,9 +43,14 @@ class _TestTripsNotifier extends TripsNotifier {
 // Fake MapService
 
 class _FakeMapService extends MapService {
+  final Map<String, dynamic> permissionResult;
+  int searchPlaceCallCount = 0;
+
+  _FakeMapService({this.permissionResult = const {'status': true}});
+
   @override
   Future<Map<String, dynamic>> isPermissionGranted() async {
-    return {'status': true};
+    return permissionResult;
   }
 
   @override
@@ -79,18 +82,16 @@ class _FakeMapService extends MapService {
   }
 
   @override
-  Future<SearchOptions> queryPlaces(
-    String currentQuery,
-    String destinationQuery,
-  ) async {
-    return SearchOptions(
-      currentLocationResults: [
-        SearchResult(locationString: 'Kolkata', lat: 22.5726, lon: 88.3639),
-      ],
-      destinationLocationResults: [
+  Future<List<SearchResult>> searchPlace(String query, {int limit = 5}) async {
+    searchPlaceCallCount++;
+    if (query.toLowerCase().contains('howrah')) {
+      return [
         SearchResult(locationString: 'Howrah', lat: 22.5958, lon: 88.2636),
-      ],
-    );
+      ];
+    }
+    return [
+      SearchResult(locationString: 'Kolkata', lat: 22.5726, lon: 88.3639),
+    ];
   }
 
   @override
@@ -162,14 +163,13 @@ void main() {
     List<Override> overrides = const [],
     MapService? mapService,
     TripRepository? tripRepository,
-    bool isActive = true,
     MapUiBuilder? mapUiBuilder,
   }) {
     return ProviderScope(
       overrides: overrides,
       child: MaterialApp(
+        theme: ThemeData(splashFactory: InkRipple.splashFactory),
         home: MapScreen(
-          isActive: isActive,
           mapOb: mapService ?? _FakeMapService(),
           tripRepo: tripRepository,
           mapUiBuilder: mapUiBuilder ?? fakeMapUiBuilder,
@@ -222,35 +222,29 @@ void main() {
   // Location tests
 
   group('MapScreen location', () {
-    testWidgets('gets and displays the current location', (tester) async {
-      await tester.pumpWidget(
-        buildTestable(
-          mapService: _FakeMapService(),
-          isActive: false,
-          overrides: [
-            userProvider.overrideWith(() => _TestUserNotifier(fakeUser)),
-            tripProvider.overrideWith(() => _TestTripsNotifier()),
-          ],
-        ),
-      );
+    testWidgets(
+      'gets and displays the current location when GPS icon is pressed',
+      (tester) async {
+        await tester.pumpWidget(
+          buildTestable(
+            mapService: _FakeMapService(),
+            overrides: [
+              userProvider.overrideWith(() => _TestUserNotifier(fakeUser)),
+              tripProvider.overrideWith(() => _TestTripsNotifier()),
+            ],
+          ),
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      await tester.pumpWidget(
-        buildTestable(
-          mapService: _FakeMapService(),
-          overrides: [
-            userProvider.overrideWith(() => _TestUserNotifier(fakeUser)),
-            tripProvider.overrideWith(() => _TestTripsNotifier()),
-          ],
-        ),
-      );
+        // Tap GPS button
+        await tester.tap(find.byIcon(Icons.gps_fixed));
+        await tester.pumpAndSettle();
 
-      await tester.pumpAndSettle();
-
-      // The fake MapService returns "Kolkata".
-      expect(find.text('Kolkata'), findsOneWidget);
-    });
+        // The fake MapService returns "Kolkata".
+        expect(find.text('Kolkata'), findsOneWidget);
+      },
+    );
 
     testWidgets('shows destination search result', (tester) async {
       await tester.pumpWidget(
@@ -276,10 +270,11 @@ void main() {
       //
       // The destination field is the second one.
       await tester.enterText(textFields.at(1), 'Howrah');
-
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
 
-      expect(find.text('Howrah'), findsOneWidget);
+      // "Howrah" appears in the TextField and in the suggestion list
+      expect(find.text('Howrah'), findsWidgets);
     });
 
     testWidgets('selects a destination from the search results', (
@@ -300,11 +295,11 @@ void main() {
       final textFields = find.byType(TextField);
 
       await tester.enterText(textFields.at(1), 'Howrah');
-
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
 
-      // Select the fake destination result.
-      await tester.tap(find.text('Howrah'));
+      // Select the fake destination result from suggestions.
+      await tester.tap(find.text('Howrah').last);
 
       await tester.pumpAndSettle();
 
@@ -322,7 +317,6 @@ void main() {
 
       await tester.pumpWidget(
         buildTestable(
-          isActive: false,
           mapService: _FakeMapService(),
           tripRepository: fakeTripRepository,
           overrides: [
@@ -336,7 +330,6 @@ void main() {
 
       await tester.pumpWidget(
         buildTestable(
-          isActive: true,
           mapService: _FakeMapService(),
           tripRepository: fakeTripRepository,
           overrides: [
@@ -348,38 +341,20 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // 1. Enter destination
-
+      // 1. Enter start location and select from suggestions
       final textFields = find.byType(TextField);
 
-      await tester.enterText(textFields.at(1), 'Howrah');
-
+      await tester.enterText(textFields.at(0), 'Kolkata');
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
-
-      // 2. Press the LocateButton
-
-      final locateButton = find.byType(LocateButton);
-
-      expect(locateButton, findsOneWidget);
-
-      await tester.tap(locateButton);
-
-      await tester.pumpAndSettle();
-
-      // 3. Select current location
-
-      expect(find.text('Kolkata'), findsNWidgets(2));
-
       await tester.tap(find.text('Kolkata').last);
-
       await tester.pumpAndSettle();
 
-      // 4. Select destination
-
-      expect(find.text('Howrah'), findsNWidgets(2));
-
+      // 2. Enter destination and select from suggestions
+      await tester.enterText(textFields.at(1), 'Howrah');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Howrah').last);
-
       await tester.pumpAndSettle();
 
       // 5. Transport modes should now appear
@@ -451,5 +426,262 @@ void main() {
 
       expect(find.text('User data not available'), findsNothing);
     });
+  });
+
+  // Location permissions & SnackBar tests
+
+  group('MapScreen location permissions & SnackBar', () {
+    testWidgets(
+      'shows actionable SnackBar when location service is disabled and keeps screen open',
+      (tester) async {
+        final mapService = _FakeMapService(
+          permissionResult: {
+            'status': false,
+            'reason': 'service_disabled',
+            'message': 'Location services are disabled.',
+          },
+        );
+
+        await tester.pumpWidget(
+          buildTestable(
+            mapService: mapService,
+            overrides: [
+              userProvider.overrideWith(() => _TestUserNotifier(fakeUser)),
+              tripProvider.overrideWith(() => _TestTripsNotifier()),
+            ],
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Tap the GPS button
+        await tester.tap(find.byIcon(Icons.gps_fixed));
+        await tester.pumpAndSettle();
+
+        // SnackBar appears with message and Settings action
+        expect(
+          find.text(
+            'Location services are disabled. Enable GPS to detect your location.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Settings'), findsOneWidget);
+
+        // Screen remains fully rendered and functional (never replaced with an error screen)
+        expect(find.byType(TextField), findsWidgets);
+
+        // Advance time past the 4-second auto-dismiss timer of showAppSnackBar
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
+
+        // Verify the SnackBar has automatically dismissed
+        expect(
+          find.text(
+            'Location services are disabled. Enable GPS to detect your location.',
+          ),
+          findsNothing,
+        );
+        expect(find.text('Settings'), findsNothing);
+      },
+    );
+
+    testWidgets('shows SnackBar when location permission is permanently denied', (
+      tester,
+    ) async {
+      final mapService = _FakeMapService(
+        permissionResult: {
+          'status': false,
+          'reason': 'permission_denied_forever',
+          'message': 'Location permissions are permanently denied.',
+        },
+      );
+
+      await tester.pumpWidget(
+        buildTestable(
+          mapService: mapService,
+          overrides: [
+            userProvider.overrideWith(() => _TestUserNotifier(fakeUser)),
+            tripProvider.overrideWith(() => _TestTripsNotifier()),
+          ],
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.gps_fixed));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Location permission is permanently denied. Enable it in app settings.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Settings'), findsOneWidget);
+
+      // Advance time past the 4-second auto-dismiss timer of showAppSnackBar
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      // Verify the SnackBar has automatically dismissed
+      expect(
+        find.text(
+          'Location permission is permanently denied. Enable it in app settings.',
+        ),
+        findsNothing,
+      );
+      expect(find.text('Settings'), findsNothing);
+    });
+  });
+
+  // Selection & Validation tests
+
+  group('MapScreen selection & validation', () {
+    testWidgets(
+      'shows SnackBar and blocks route when start and destination are identical',
+      (tester) async {
+        await tester.pumpWidget(
+          buildTestable(
+            mapService: _FakeMapService(),
+            overrides: [
+              userProvider.overrideWith(() => _TestUserNotifier(fakeUser)),
+              tripProvider.overrideWith(() => _TestTripsNotifier()),
+            ],
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final textFields = find.byType(TextField);
+
+        // Select "Kolkata" as start
+        await tester.enterText(textFields.at(0), 'Kolkata');
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Kolkata').last);
+        await tester.pumpAndSettle();
+
+        // Select "Kolkata" as destination as well
+        await tester.enterText(textFields.at(1), 'Kolkata');
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Kolkata').last);
+        await tester.pumpAndSettle();
+
+        // Warning SnackBar is shown
+        expect(
+          find.text('Start and destination cannot be the same place.'),
+          findsOneWidget,
+        );
+
+        // Route options never appear
+        expect(find.text('Choose a mode of transportation'), findsNothing);
+
+        // Advance time past the 4-second auto-dismiss timer of showAppSnackBar
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
+
+        // Verify the warning SnackBar has automatically dismissed
+        expect(
+          find.text('Start and destination cannot be the same place.'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'does not show transport modes when user types without selecting from suggestions',
+      (tester) async {
+        await tester.pumpWidget(
+          buildTestable(
+            mapService: _FakeMapService(),
+            overrides: [
+              userProvider.overrideWith(() => _TestUserNotifier(fakeUser)),
+              tripProvider.overrideWith(() => _TestTripsNotifier()),
+            ],
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final textFields = find.byType(TextField);
+
+        // User types arbitrary text in both without tapping any suggestion
+        await tester.enterText(textFields.at(0), 'Some random place');
+        await tester.enterText(textFields.at(1), 'Another random place');
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+
+        // Transport modes should NOT appear because neither has verified coordinates
+        expect(find.text('Choose a mode of transportation'), findsNothing);
+      },
+    );
+  });
+
+  // Search UX & Debouncing tests
+
+  group('MapScreen search UX & debouncing', () {
+    testWidgets('typing in destination immediately clears start suggestions', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestable(
+          mapService: _FakeMapService(),
+          overrides: [
+            userProvider.overrideWith(() => _TestUserNotifier(fakeUser)),
+            tripProvider.overrideWith(() => _TestTripsNotifier()),
+          ],
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final textFields = find.byType(TextField);
+
+      // 1. Type in start field to show start suggestions
+      await tester.enterText(textFields.at(0), 'Kolkata');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      // Start suggestion tile is visible
+      expect(find.text('Kolkata'), findsWidgets);
+
+      // 2. Type in destination field
+      await tester.enterText(textFields.at(1), 'Howrah');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      // Destination suggestions are visible
+      expect(find.text('Howrah'), findsWidgets);
+    });
+
+    testWidgets(
+      'typing whitespace does not call searchPlace and immediately clears suggestions',
+      (tester) async {
+        final mapService = _FakeMapService();
+
+        await tester.pumpWidget(
+          buildTestable(
+            mapService: mapService,
+            overrides: [
+              userProvider.overrideWith(() => _TestUserNotifier(fakeUser)),
+              tripProvider.overrideWith(() => _TestTripsNotifier()),
+            ],
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        final textFields = find.byType(TextField);
+
+        // Type whitespace only
+        await tester.enterText(textFields.at(0), '    ');
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
+
+        // searchPlace should never have been invoked
+        expect(mapService.searchPlaceCallCount, 0);
+      },
+    );
   });
 }
