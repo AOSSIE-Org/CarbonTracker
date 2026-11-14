@@ -71,18 +71,23 @@ What we expect:
 
 Before setting up CarbonTracker, make sure you have the following installed:
 
-- Flutter
+- Flutter 3.44.0 (the exact version pinned by `pubspec.yaml` and CI)
 - Dart (included with Flutter)
+- [FVM](https://fvm.app/documentation/getting-started/installation) (recommended)
 - Android Studio or another Flutter-supported development environment
 - An Android/iOS emulator or a physical device
 
-You can verify your Flutter installation by running:
+Using a different Flutter version can cause dependency resolution or CI mismatches. If you do not
+use FVM, install Flutter 3.44.0 globally and omit the `fvm` prefix from the commands below.
+
+You can verify your FVM-managed Flutter installation by running:
 
 ```bash
-flutter doctor
+fvm flutter --version
+fvm flutter doctor
 ```
 
-Resolve any issues reported by `flutter doctor` before proceeding.
+Resolve any issues reported by `fvm flutter doctor` before proceeding.
 
 ### Setup
 
@@ -102,14 +107,23 @@ Resolve any issues reported by `flutter doctor` before proceeding.
    git remote add upstream https://github.com/AOSSIE-Org/CarbonTracker.git
    ```
 
-4. **Install Dependencies**
+4. **Install and select the pinned Flutter SDK**
    ```bash
-   flutter pub get
+   fvm install
+   fvm use 3.44.0
+   fvm flutter --version
    ```
 
-5. **Run the Project**
+   The reported Flutter version must be `3.44.0`.
+
+5. **Install Dependencies**
    ```bash
-   flutter run
+   fvm flutter pub get
+   ```
+
+6. **Run the Project**
+   ```bash
+   fvm flutter run
    ```
 
 ## 🔄 Development Workflow
@@ -134,9 +148,8 @@ git checkout -b fix/your-bug-fix
 ### 3. Test Your Changes
 
 ```bash
-flutter test
-# or
-flutter analyze
+fvm flutter analyze
+fvm flutter test
 ```
 
 ### 4. Commit Your Changes

@@ -329,6 +329,7 @@ TSWLatexianTemp*
 .dart_tool/
 .packages
 .pub/
+.fvm/
 build/
 
 # IntelliJ / Android Studio

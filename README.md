@@ -166,18 +166,26 @@ flowchart TD
 
 Before setting up CarbonTracker, make sure you have the following installed:
 
-- Flutter
+- Flutter 3.44.0
 - Dart (included with Flutter)
+- [FVM](https://fvm.app/documentation/getting-started/installation) (recommended)
 - Android Studio or another Flutter-supported development environment
 - An Android/iOS emulator or a physical device
 
-You can verify your Flutter installation by running:
+CarbonTracker pins Flutter 3.44.0 in `pubspec.yaml`, CI, and `.fvmrc`. See the
+[contribution guide](./CONTRIBUTING.md#getting-started) for full FVM setup and troubleshooting.
+
+You can verify the pinned SDK by running:
 
 ```bash
-flutter doctor
+fvm install
+fvm use 3.44.0
+fvm flutter --version
+fvm flutter doctor
 ```
 
-Resolve any issues reported by `flutter doctor` before proceeding.
+If you use a global Flutter installation instead, it must also be version 3.44.0; omit the `fvm`
+prefix from the commands below.
 
 ### Installation
 
@@ -191,7 +199,7 @@ cd CarbonTracker
 #### 2. Install Dependencies
 
 ```bash
-flutter pub get
+fvm flutter pub get
 ```
 
 #### 3. Run the App
@@ -199,13 +207,13 @@ flutter pub get
 First, check that Flutter can detect your available devices:
 
 ```bash
-flutter devices
+fvm flutter devices
 ```
 
 Then run the application with:
 
 ```bash
-flutter run
+fvm flutter run
 ```
 
 You can run the project directly from Android Studio or another IDE with Flutter support.
@@ -216,13 +224,13 @@ To create a release build, run the command for your target platform:
 
 ```bash
 # Android APK
-flutter build apk --release
+fvm flutter build apk --release
 
 # Android App Bundle (for Play Store)
-flutter build appbundle --release
+fvm flutter build appbundle --release
 
 # iOS (requires macOS and Xcode)
-flutter build ios --release
+fvm flutter build ios --release
 ```
 
 ### Testing
@@ -230,16 +238,16 @@ flutter build ios --release
 #### Unit and Widget Tests
 
 ```bash
-flutter test
+fvm flutter test
 ```
 
 #### Integration Tests
 
 Integration tests need a connected device or running emulator. Check that one is available with
-`flutter devices`, then run:
+`fvm flutter devices`, then run:
 
 ```bash
-flutter test integration_test
+fvm flutter test integration_test
 ```
 
 ## 📱 App Screenshots
