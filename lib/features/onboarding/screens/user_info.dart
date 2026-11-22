@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:carbon_tracker/core/config/route_constants.dart';
 import 'package:carbon_tracker/core/data/tracking_options.dart';
+import 'package:carbon_tracker/core/helpers/weight_validator.dart';
 import 'package:carbon_tracker/core/data/transport_preferences.dart';
 import 'package:carbon_tracker/core/widgets/loader.dart';
 import 'package:carbon_tracker/database/models/user.dart';
@@ -56,7 +57,7 @@ class _UserInfoScreenState extends ConsumerState<UserInfoScreen> {
   }
 
   bool _isWeightValid() {
-    return (_weight > 1 && _weight < 500);
+    return isValidWeight(_weight);
   }
 
   bool _checkValidation() {

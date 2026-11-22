@@ -2,6 +2,7 @@ import 'package:carbon_tracker/core/config/app_constants.dart';
 import 'package:carbon_tracker/core/data/tracking_options.dart';
 import 'package:carbon_tracker/core/data/transport_preferences.dart';
 import 'package:carbon_tracker/core/enums/comparison_modes.dart';
+import 'package:carbon_tracker/core/helpers/weight_validator.dart';
 import 'package:carbon_tracker/core/providers/trips_provider.dart';
 import 'package:carbon_tracker/core/widgets/modal.dart';
 import 'package:carbon_tracker/database/models/user.dart';
@@ -35,13 +36,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> saveData() async {
     final user = ref.read(userProvider);
     if (user != null) {
-      final weight = double.tryParse(_weightController.text) ?? user.weight;
+      final weight = double.tryParse(_weightController.text.trim());
+      if (!isValidWeight(weight)) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(kWeightRangeError)),
+        );
+        return;
+      }
       try {
         await ref
             .read(userProvider.notifier)
             .updateUser(
               user.copyWith(
-                weight: weight < 1 || weight > 500 ? user.weight : weight,
+                weight: weight,
                 sustainabilityThoughts: _sustainabilityController.text,
               ),
             );

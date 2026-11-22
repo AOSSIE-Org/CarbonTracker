@@ -207,6 +207,67 @@ void main() {
       expect(fakeUserNotifier.lastUpdatedUser?.weight, 70.0);
     });
 
+    testWidgets('SAVE CHANGES accepts the 500 kg boundary', (tester) async {
+      final fakeUserNotifier = FakeUserNotifier(fakeUser);
+
+      await tester.pumpWidget(
+        buildTestable(user: fakeUser, userNotifier: fakeUserNotifier),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, '500');
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -600),
+      );
+      await tester.tap(find.text('SAVE CHANGES'));
+      await tester.pumpAndSettle();
+
+      expect(fakeUserNotifier.lastUpdatedUser?.weight, 500.0);
+    });
+
+    testWidgets('SAVE CHANGES with an out-of-range weight shows an error '
+        'and does not save', (tester) async {
+      final fakeUserNotifier = FakeUserNotifier(fakeUser);
+
+      await tester.pumpWidget(
+        buildTestable(user: fakeUser, userNotifier: fakeUserNotifier),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, '600');
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -600),
+      );
+      await tester.tap(find.text('SAVE CHANGES'));
+      await tester.pump();
+
+      expect(find.text('Weight must be between 1 and 500 kg'), findsOneWidget);
+      expect(fakeUserNotifier.lastUpdatedUser, isNull);
+    });
+
+    testWidgets('SAVE CHANGES with non-numeric weight shows an error '
+        'and does not save', (tester) async {
+      final fakeUserNotifier = FakeUserNotifier(fakeUser);
+
+      await tester.pumpWidget(
+        buildTestable(user: fakeUser, userNotifier: fakeUserNotifier),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, 'abc');
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -600),
+      );
+      await tester.tap(find.text('SAVE CHANGES'));
+      await tester.pump();
+
+      expect(find.text('Weight must be between 1 and 500 kg'), findsOneWidget);
+      expect(fakeUserNotifier.lastUpdatedUser, isNull);
+    });
+
     testWidgets('tapping SIGN OUT clears data and navigates to onboarding', (
       tester,
     ) async {
