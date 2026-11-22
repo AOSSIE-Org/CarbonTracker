@@ -349,3 +349,13 @@ build/
 
 # Security review artifacts
 unremediated-security-reviews/
+
+# FVM (Flutter Version Management)
+.fvm/
+.fvmrc
+
+# Android Keystore and Signing
+key.properties
+**/key.properties
+*.keystore
+*.jks

@@ -72,7 +72,7 @@ Automatic cleanup of older trip history
 
 ### Frontend
 
-- Flutter / Dart
+- Flutter (3.44.0) / Dart
 - SQLite (sqflite)
 - Riverpod
 - Health Connect / HealthKit
@@ -166,7 +166,7 @@ flowchart TD
 
 Before setting up CarbonTracker, make sure you have the following installed:
 
-- Flutter
+- Flutter 3.44.0 (strictly required by `pubspec.yaml` and CI)
 - Dart (included with Flutter)
 - Android Studio or another Flutter-supported development environment
 - An Android/iOS emulator or a physical device
@@ -178,6 +178,11 @@ flutter doctor
 ```
 
 Resolve any issues reported by `flutter doctor` before proceeding.
+
+> [!TIP]
+> CarbonTracker strictly pins **Flutter 3.44.0**. If you have a different Flutter version installed globally, we recommend using [FVM (Flutter Version Management)](https://fvm.app/) so you don't need to change your system Flutter version.
+>
+> For detailed FVM setup, IDE configuration, and troubleshooting, please refer to **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 ### Installation
 
@@ -191,6 +196,10 @@ cd CarbonTracker
 #### 2. Install Dependencies
 
 ```bash
+# With FVM (recommended)
+fvm flutter pub get
+
+# Or with global Flutter 3.44.0
 flutter pub get
 ```
 
@@ -199,16 +208,24 @@ flutter pub get
 First, check that Flutter can detect your available devices:
 
 ```bash
+# With FVM
+fvm flutter devices
+
+# Or with global Flutter
 flutter devices
 ```
 
 Then run the application with:
 
 ```bash
+# With FVM
+fvm flutter run
+
+# Or with global Flutter
 flutter run
 ```
 
-You can run the project directly from Android Studio or another IDE with Flutter support.
+You can run the project directly from Android Studio or another IDE with Flutter support (see [CONTRIBUTING.md](CONTRIBUTING.md) for IDE setup).
 
 #### 4. Build the App
 
@@ -216,13 +233,16 @@ To create a release build, run the command for your target platform:
 
 ```bash
 # Android APK
-flutter build apk --release
+fvm flutter build apk --release       # With FVM
+flutter build apk --release           # With global Flutter
 
 # Android App Bundle (for Play Store)
-flutter build appbundle --release
+fvm flutter build appbundle --release # With FVM
+flutter build appbundle --release     # With global Flutter
 
 # iOS (requires macOS and Xcode)
-flutter build ios --release
+fvm flutter build ios --release       # With FVM
+flutter build ios --release           # With global Flutter
 ```
 
 ### Testing
@@ -230,15 +250,23 @@ flutter build ios --release
 #### Unit and Widget Tests
 
 ```bash
+# With FVM
+fvm flutter test
+
+# Or with global Flutter
 flutter test
 ```
 
 #### Integration Tests
 
 Integration tests need a connected device or running emulator. Check that one is available with
-`flutter devices`, then run:
+`fvm flutter devices` (or `flutter devices`), then run:
 
 ```bash
+# With FVM
+fvm flutter test integration_test
+
+# Or with global Flutter
 flutter test integration_test
 ```
 

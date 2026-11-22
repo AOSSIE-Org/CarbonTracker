@@ -71,8 +71,8 @@ What we expect:
 
 Before setting up CarbonTracker, make sure you have the following installed:
 
-- Flutter
-- Dart (included with Flutter)
+- **Flutter 3.44.0** (strictly required by `pubspec.yaml` and CI)
+- **Dart** (included with Flutter)
 - Android Studio or another Flutter-supported development environment
 - An Android/iOS emulator or a physical device
 
@@ -83,6 +83,22 @@ flutter doctor
 ```
 
 Resolve any issues reported by `flutter doctor` before proceeding.
+
+### Flutter Version Management (FVM) — Recommended
+
+Because CarbonTracker strictly pins Flutter 3.44.0, we strongly recommend using [FVM (Flutter Version Management)](https://fvm.app/) to avoid conflicts with your system's global Flutter version.
+
+1. **Install FVM** (if not already installed):
+   ```bash
+   dart pub global activate fvm
+   ```
+   > **Note:** Ensure your Dart SDK cache `bin` directory (e.g., `C:\Users\<User>\AppData\Local\Pub\Cache\bin` on Windows or `~/.pub-cache/bin` on macOS/Linux) is added to your system's `PATH` environment variable so the `fvm` command is globally accessible.
+
+2. **Useful FVM Commands:**
+   - `fvm install 3.44.0` — download and install Flutter 3.44.0.
+   - `fvm use 3.44.0` — pin Flutter 3.44.0 to this project.
+   - `fvm list` — view all installed Flutter versions on your system.
+   - `fvm flutter <command>` — run any Flutter command with the pinned version.
 
 ### Setup
 
@@ -102,15 +118,64 @@ Resolve any issues reported by `flutter doctor` before proceeding.
    git remote add upstream https://github.com/AOSSIE-Org/CarbonTracker.git
    ```
 
-4. **Install Dependencies**
+4. **Pin Flutter Version (FVM Users)**
    ```bash
+   fvm install 3.44.0
+   fvm use 3.44.0
+   ```
+
+5. **Install Dependencies**
+   ```bash
+   # With FVM (recommended)
+   fvm flutter pub get
+
+   # Or with global Flutter 3.44.0
    flutter pub get
    ```
 
-5. **Run the Project**
+6. **Run the Project**
    ```bash
+   # With FVM
+   fvm flutter run
+
+   # Or with global Flutter
    flutter run
    ```
+
+### 💻 IDE Configuration
+
+#### VS Code
+Create or edit `.vscode/settings.json` in the project root:
+```json
+{
+  "dart.flutterSdkPath": ".fvm/flutter_sdk",
+  "search.exclude": {
+    "**/.fvm": true
+  },
+  "files.watcherExclude": {
+    "**/.fvm": true
+  }
+}
+```
+
+#### Android Studio
+Go to **Settings (Preferences)** > **Languages & Frameworks** > **Flutter**, and set the **Flutter SDK path** to:
+`<project-directory>/.fvm/flutter_sdk`
+
+### 📱 Android Build Configuration (`key.properties`)
+
+Gradle requires `android/key.properties` during project configuration, even when building or debugging locally. If missing, Gradle will fail with a `NullPointerException`.
+
+To configure local builds, create a file named `android/key.properties` in the `android/` directory with dummy placeholder values:
+
+```properties
+keyAlias=dummyKey
+keyPassword=dummyPassword
+storeFile=dummyStore
+storePassword=dummyPassword
+```
+
+> **Security Warning:** `key.properties` contains sensitive signing data and should **never** be committed to Git (it is already included in `.gitignore`).
 
 ## 🔄 Development Workflow
 
@@ -133,9 +198,15 @@ git checkout -b fix/your-bug-fix
 
 ### 3. Test Your Changes
 
+Always run tests and analysis before committing:
+
 ```bash
+# With FVM (recommended)
+fvm flutter test
+fvm flutter analyze
+
+# Or with global Flutter
 flutter test
-# or
 flutter analyze
 ```
 
